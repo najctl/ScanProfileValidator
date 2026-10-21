@@ -1,6 +1,6 @@
 # WALKTHROUGH.md — Follow one example
 
-This document demonstrates the program using one profile from the supplied input. It is the written alternative to the requested walkthrough recording.
+This document follows one supplied profile from input to validation report. It is the written alternative to the requested walkthrough recording. You can follow it with Python or Docker Compose; both routes use the same code, files and rules.
 
 ## 1. Look at the input
 
@@ -26,15 +26,25 @@ These are the settings the program will check. They contain deliberate mistakes.
 
 ## 2. Run the command
 
-From the project directory:
+Choose one route from the project directory.
+
+**With Python 3.10 or later:**
 
 ```powershell
 python app.py --input inputs/primary.json
 ```
 
-`app.py` reads the file and converts the JSON into Python data. It passes that data to `validator.py`, which applies the rules. `diagnostics.py` prepares the final report.
+**With Docker Desktop running in Linux-container mode:**
 
-No website is contacted.
+```powershell
+docker compose run --build --rm validator --input inputs/primary.json
+```
+
+Here, `validator` is the application service defined in `compose.yaml`. It is not a filename. The `--input` argument selects the primary JSON file. The first Compose run builds the image, including the existing 18-test suite, before executing the validator.
+
+Both commands reach the same workflow: `app.py` reads JSON, `validator.py` checks the rules, and `diagnostics.py` prepares the report. Docker supplies the Python environment; Compose supplies the saved runtime settings.
+
+Follow the same report below whichever route you choose. No target website is contacted.
 
 ## 3. Find this profile in the report
 
@@ -92,7 +102,7 @@ Profile 1 has an unknown `owner` field. That produces a warning, but the profile
 
 Elsewhere, primary profile 4 demonstrates a URL trap: an allowed-looking domain appears before `@`, but the actual hostname is `relay.example`. The validator checks the parsed hostname and correctly rejects it.
 
-Detected secrets receive a `secret` error without exposing their values. Their paths do not receive additional validation errors.
+Detected secrets receive a `secret` error without exposing their values. Their paths do not receive additional validation errors. The location text inside an error or warning is protected too: if a secret was accidentally used as an unknown field name, that part of the location is hidden. Quotes and backslashes in a field name do not bypass this protection. Existing secret tests cover these cases; the suite remains at 18 test methods.
 
 ## 6. Check the batch summary
 
@@ -112,20 +122,48 @@ These totals match the primary expectations in the README. The command returns e
 
 ## 7. Verify and repeat with another policy
 
-Run:
+Run the existing test suite using the route you chose.
+
+**Python:**
 
 ```powershell
 python -m unittest discover -s tests -p "*_test.py" -v
 ```
 
-The result should show **18 tests passing**. These checks verify the program's behavior, including duration boundaries, duplicates, authentication, secrets, and error handling.
+**Compose:**
 
-Then run:
+```powershell
+docker compose run --rm --entrypoint python validator -m unittest discover -s tests -p "*_test.py" -v
+```
+
+Expect **18 tests passing** and exit **0**. This is one test suite run in either environment, not two sets of different tests. The checks cover duration boundaries, duplicates, authentication, secrets and error handling.
+
+Now select the second team's input using the same route.
+
+**Python:**
 
 ```powershell
 python app.py --input inputs/secondary.json
 ```
 
-The same code reads the second file's policy and produces **5 errors and 1 warning across 4 profiles**. This demonstrates reuse.
+**Compose:**
 
-For the full saved outputs, open `evidence/primary-report.json`, `evidence/secondary-report.json`, and `evidence/tests.txt`.
+```powershell
+docker compose run --rm validator --input inputs/secondary.json
+```
+
+The validator reads the second file's policy automatically. Profile 0 passes; profile 1 has a disallowed host and excessive duration; profile 2 has an unused auth reference and a floating-point duration; profile 3 contains a secret in an unknown auth field. Totals are **4 profiles, 1 valid, 3 invalid, 5 errors and 1 warning**, with exit **1**.
+
+For saved results, open `evidence/primary-report.json`, `evidence/secondary-report.json` and `evidence/tests.txt`. There is one report per fixture because the full Python, Docker and Compose reports matched. `evidence/verification.json` records the commands and outcomes for each run method. Normal program runs do not add files to the evidence folder.
+
+## 8. Why Docker and Compose are optional
+
+The assignment asks for a reusable validator CLI. That remains the core deliverable and runs directly with Python's standard library.
+
+Docker was added after the core was verified to provide a consistent local Python environment. Compose makes that option easier to use by keeping the container settings in `compose.yaml`. They do not change the validator's business rules or its output.
+
+This is not a public deployment: there is no hosted application, published image or exposed application port. The Compose container has no network, runs as a non-root user, and uses a read-only root filesystem. Its small temporary directory lets the existing tests create temporary input files. The first build may need internet access to download the base image.
+
+The README permits optional improvements to the local developer experience, says public deployment is outside core scope, and states that full marks are available on the core alone. Docker and Compose are conveniences a reviewer can choose, not requirements for running or assessing the solution.
+
+Sections 11 and 12 of `SUBMISSION.md` give the full container instructions, including saving a report and selecting another input file. The README itself remains the company's original assignment text.

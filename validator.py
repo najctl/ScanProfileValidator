@@ -7,6 +7,10 @@ from urllib.parse import urlsplit
 from diagnostics import child_path, finalize_report
 
 
+PROFILE_FIELDS = {'name', 'target', 'schedule', 'auth', 'max_duration_minutes', 'exclude_paths'}
+AUTH_FIELDS = {'type', 'token_ref', 'recording_id'}
+
+
 def validate_profiles(payload, arguments=None):
     """Return a report without changing payload; raise ValueError for invalid structure."""
     if not isinstance(payload, dict):
@@ -27,17 +31,28 @@ def validate_profiles(payload, arguments=None):
         root = f'$.profiles[{index}]'
         errors, warnings, secret_paths = [], [], set()
 
+        def mark_secret(value, path):
+            secrets.add(value)
+            if path not in secret_paths:
+                secret_paths.add(path)
+                errors.append(dict(path=path, code='secret', message='Secret value redacted'))
+
         def scan(value, path):
             # An explicit stack handles deep unknown fields without Python recursion.
             pending = [(value, path)]
             while pending:
                 value, path = pending.pop()
                 if isinstance(value, str) and value.startswith(prefixes):
-                    secrets.add(value)
-                    secret_paths.add(path)
-                    errors.append(dict(path=path, code='secret', message='Secret value redacted'))
+                    mark_secret(value, path)
                 elif isinstance(value, dict):
-                    pending.extend((item, child_path(path, key)) for key, item in value.items())
+                    # Fixed schema names are protocol labels. Unknown names can
+                    # contain pasted credentials, just like their values.
+                    known = PROFILE_FIELDS if path == root else AUTH_FIELDS if path == root + '.auth' else set()
+                    for key, item in value.items():
+                        child = child_path(path, key)
+                        if key not in known and key.startswith(prefixes):
+                            mark_secret(key, child)
+                        pending.append((item, child))
                 elif isinstance(value, list):
                     pending.extend((item, f'{path}[{i}]') for i, item in enumerate(value))
 
@@ -64,7 +79,7 @@ def validate_profiles(payload, arguments=None):
             for key in obj.keys() - allowed:
                 warnings.append(dict(path=child_path(parent, key), code='unknown_field', message='Unknown field'))
 
-        unknown(profile, {'name', 'target', 'schedule', 'auth', 'max_duration_minutes', 'exclude_paths'}, root)
+        unknown(profile, PROFILE_FIELDS, root)
         name = get(profile, 'name', root, str)
         if name is not None:
             if not re.fullmatch(r'[a-z][a-z0-9-]{2,39}', name):
@@ -92,7 +107,7 @@ def validate_profiles(payload, arguments=None):
         auth = get(profile, 'auth', root, dict)
         if auth is not None:
             parent = root + '.auth'
-            unknown(auth, {'type', 'token_ref', 'recording_id'}, parent)
+            unknown(auth, AUTH_FIELDS, parent)
             kind = get(auth, 'type', parent, str)
             if kind is not None and kind not in {'none', 'bearer', 'recorded'}:
                 error(parent + '.type', 'invalid', 'Expected none, bearer or recorded')

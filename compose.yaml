@@ -1,0 +1,17 @@
+name: scan-profile-validator
+
+services:
+  validator:
+    build:
+      context: .
+    image: scan-profile-validator
+    user: "10001:10001"
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    # The existing test suite needs temporary files; input files remain read-only.
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m

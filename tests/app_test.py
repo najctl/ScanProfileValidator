@@ -92,12 +92,65 @@ class ValidatorTests(unittest.TestCase):
         self.assertEqual([code for _, code in self.codes(data)], ['secret'] * 3)
         self.assertEqual(len(report['profiles'][0]['warnings']), 1)
 
+        # Secrets in unknown keys must not be echoed by diagnostic paths.
+        # Include characters that JSON escapes before printing a field name.
+        for secret in ('demo_tok_key', 'demo_tok_quote"key', 'demo_tok_back\\slash',
+                       'demo_tok_line\nkey', 'demo_tok_unicode_\u00e9', 'DEMO-KEY-key'):
+            for location in ('profile', 'auth', 'nested'):
+                with self.subTest(secret=secret, location=location):
+                    data = batch()
+                    profile = data['profiles'][0]
+                    if location == 'profile':
+                        profile[secret] = 'ordinary'
+                    elif location == 'auth':
+                        profile['auth'][secret] = 'ordinary'
+                    else:
+                        profile['extra'] = {secret: 'ordinary'}
+                    original = copy.deepcopy(data)
+                    report = validate_profiles(data)
+                    self.assertEqual(data, original)
+                    self.assertEqual(report['summary']['errors'], 1)
+                    self.assertEqual(report['profiles'][0]['errors'][0]['code'], 'secret')
+                    self.assertEqual(report['summary']['warnings'], 1)
+                    self.assertFalse(report['profiles'][0]['valid'])
+                    self.assertNotIn('demo_tok_', json.dumps(report))
+                    self.assertNotIn('DEMO-KEY-', json.dumps(report))
+                    self.assertIn('[REDACTED]', report['profiles'][0]['errors'][0]['path'])
+
+            # A known secret can appear inside a key without starting that key.
+            with self.subTest(secret=secret, location='embedded_in_key'):
+                data = batch()
+                data['profiles'][0]['extra'] = secret
+                data['profiles'][0]['label-' + secret] = 'ordinary'
+                report = validate_profiles(data)
+                self.assertEqual(report['summary']['errors'], 1)
+                self.assertNotIn('demo_tok_', json.dumps(report))
+                self.assertNotIn('DEMO-KEY-', json.dumps(report))
+                self.assertTrue(any('[REDACTED]' in d['path'] for d in report['profiles'][0]['warnings']))
+
+        # A secret key and secret value at one location produce one error.
+        data = batch()
+        data['profiles'][0]['demo_tok_key'] = 'DEMO-KEY-value'
+        report = validate_profiles(data)
+        self.assertEqual(report['summary']['errors'], 1)
+        self.assertEqual(report['summary']['warnings'], 1)
+        self.assertNotIn('demo_tok_', json.dumps(report))
+        self.assertNotIn('DEMO-KEY-', json.dumps(report))
+
     def test_cli_secret_redaction(self):
         data = batch()
         data['profiles'][0]['name'] = 'demo_tok_private'
         result = self.cli_data(data)
         self.assertEqual(result.returncode, 1)
         self.assertNotIn('demo_tok_private', result.stdout + result.stderr)
+        data = batch()
+        data['profiles'][0]['extra'] = 'demo_tok_quote"key'
+        data['profiles'][0]['label-demo_tok_quote"key'] = 'ordinary'
+        result = self.cli_data(data)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stderr, '')
+        self.assertNotIn('demo_tok_', result.stdout)
+        self.assertTrue(any('[REDACTED]' in d['path'] for d in json.loads(result.stdout)['profiles'][0]['warnings']))
 
     def test_redaction_preserves_diagnostic_codes(self):
         data = batch()
@@ -121,6 +174,10 @@ class ValidatorTests(unittest.TestCase):
         profile = validate_profiles(data)['profiles'][0]
         self.assertEqual(profile['name'], '[REDACTED]')
         self.assertNotIn('demo_tok_private', json.dumps(profile))
+        data['profiles'][0]['RED'] = 'ordinary'
+        profile = validate_profiles(data)['profiles'][0]
+        self.assertIn('$.profiles[0]["[REDACTED]"]', [d['path'] for d in profile['errors']])
+        self.assertNotIn('[[REDACTED]ACTED]', json.dumps(profile))
 
     def test_missing_wrong_types_and_auth_skip(self):
         data = batch()

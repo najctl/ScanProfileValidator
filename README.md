@@ -1,9 +1,5 @@
 # Scan profile config validator with path-precise diagnostics
 
-**Reviewer quick start:** [Submission report and run guide](SUBMISSION.md) · [Written walkthrough](WALKTHROUGH.md) · [Recorded verification](evidence/verification.json)
-
-The implementation, tests, supplied inputs and submission documents are included in this directory. The assessment instructions and acceptance criteria follow below.
-
 This is one Software Engineer Intern assessment with a **24-hour** window. Your recruiter assigns one exercise from the bank. Your 24 hours start when you click **Start** on the link in your invitation email; the exercise zip becomes available at that moment. Send your submission back within 24 hours of clicking Start. You are not expected to work for the full 24 hours: organize your own working time and breaks within the window. There are no surprise messages or overnight availability requirements, and hours worked are not scored. Follow-through and verification matter more than hours or volume.
 
 Teams on the fictional North scanning platform submit scan profiles as JSON. A bad profile is noticed only hours later, when its scan fails, and some profiles contain pasted credentials. Build a reusable validator CLI that reports every problem with a precise JSON path before submission, separates errors from warnings, and never repeats a secret.
@@ -14,24 +10,24 @@ All companies, tenants, assets and product behavior here are **fictional assessm
 
 You need basic Python, JSON, CLI use, tests, and familiarity with schema validation, URL parsing and diagnostics. Python **3.10 or later**, its standard library, and any local editor are sufficient; no packages, accounts, paid tools, web access or company framework are needed.
 
-- [Validator CLI](app.py): argument parsing, safe JSON loading, and reusable profile validation.
+- [Starter CLI](app.py): argument parsing and safe JSON loading, with the feature deliberately unfinished.
 - [Primary fixture](inputs/primary.json): main cases, including deliberate inconsistencies.
 - [Second fixture](inputs/secondary.json): another team's profiles and policy; use it to demonstrate reuse.
 - [Malformed input](inputs/malformed-input.txt): deliberately truncated JSON, despite its .txt extension; use for error handling.
-- [Automated checks](tests/app_test.py): infrastructure, feature acceptance, boundary, and regression tests.
+- [Starter smoke checks](tests/app_test.py): four infrastructure checks, **not feature acceptance tests**.
 
 `demo_tok_` and `DEMO-KEY-` values are fake, nonfunctional secrets.
 
 From the exported `candidate/` directory:
 
 ```sh
-python --version
-python app.py --help
-python -m unittest discover -s tests -p '*_test.py' -v
-python app.py --input inputs/primary.json
+python3 --version
+python3 app.py --help
+python3 -m unittest discover -s tests -p '*_test.py' -v
+python3 app.py --input inputs/primary.json
 ```
 
-The validator is implemented. The test suite includes feature assertions and the original help/file-error checks. The primary command prints a JSON report and exits **1**, because its intentional invalid profiles are detected. See [SUBMISSION.md](SUBMISSION.md) for the run guide, decisions, AI-use note, and text walkthrough. Python 3.10+ is required; no packages are needed. On systems where the interpreter is named python3, substitute python3 for python in these commands.
+The initial smoke suite should pass. The last command should print `STARTER: implement validate_profiles` to stderr, return **3**, and produce no stdout. This is intentional, not a setup failure. The starter neither solves the feature nor provides a completed output. Replace the placeholder behavior and replace its smoke assertion with feature assertions; keep the help/file-error checks. You may restructure code, but preserve documented CLI options and make the README run commands accurate.
 
 ## Core task and observable acceptance criteria
 
@@ -42,18 +38,18 @@ Build a usable feature implementing the following contract. Use JSON on stdout f
 - Required profile fields: `name` matches `^[a-z][a-z0-9-]{2,39}$` and is unique ignoring case (a later repeat gets `duplicate`, plus any `invalid`). `target` is an `https` URL whose parsed host, lowercased, ends with one of `allowed_suffixes`. `schedule` is exactly `daily HH:MM` or `weekly DAY HH:MM`, with DAY one of `Mon Tue Wed Thu Fri Sat Sun` and a two-digit 24-hour time `00:00`–`23:59`. `max_duration_minutes` is an integer from 5 to 240; booleans and numbers with a decimal point or exponent (`45.0`) are `type` errors.
 - `auth` is required; its `type` is `none`, `bearer` or `recorded`; if missing or wrong, skip the other auth checks. `bearer` requires `token_ref`, an environment variable name matching `^[A-Z][A-Z0-9_]{2,63}$`. `recorded` requires `recording_id` matching `^rec-[0-9]{4}$`. A `token_ref` or `recording_id` the type does not use is `not_allowed`. Optional `exclude_paths` holds strings starting with `/`; an exact repeat is `duplicate`.
 - Any string at any depth of a profile, unknown fields included, that starts with a `secret_prefixes` entry is a `secret` error, and that path gets no other error. No output may contain the secret value.
-- Output `profiles` in input order, each with `index`, `name` (or `null` if not a string), `valid` (no errors; warnings do not count), `errors` and `warnings`, each sorted by path then code as plain strings; and `summary` with `profiles, valid, invalid, errors, warnings`. Exit 0 when all profiles are valid, **1** when any is invalid (still printing the report), 2 when fatal. The implemented CLI returns exit 1 for invalid profiles.
+- Output `profiles` in input order, each with `index`, `name` (or `null` if not a string), `valid` (no errors; warnings do not count), `errors` and `warnings`, each sorted by path then code as plain strings; and `summary` with `profiles, valid, invalid, errors, warnings`. Exit 0 when all profiles are valid, **1** when any is invalid (still printing the report), 2 when fatal. The starter has no exit 1 yet.
 - Output is deterministic and the input is never changed. Empty `profiles` gives zero counts and exit 0. Each fixture carries its own policy.
 
 Primary: 7 profiles, 2 valid, 5 invalid, 13 errors, 2 warnings, exit 1. Per profile (index: errors/warnings): 0: 0/0, 1: 0/1, 2: 4/0, 3: 1/0, 4: 2/0, 5: 3/0, 6: 3/1. Add tests for case-insensitive duplicates, a boolean duration, host matching, a redacted secret, exit codes 0/1/2, an empty batch and malformed input. Secondary: run the validator unchanged and reconcile every profile.
 
 Add meaningful automated checks that test results and errors, not just that code runs. Include at least one boundary case you construct, and one failing case you fix or a validation that causes a refinement. A clear, tested core earns full marks. Optional stretch: improve the local developer experience or add a useful extra test; no stretch is necessary. A web service, full framework, database, public deployment, or large architecture is outside the core scope.
 
-After implementing the core, use these exact local verification runs. Both fixture invocations print their reports and exit 1 because they contain deliberate invalid profiles.
+After implementing the core, use these exact local verification runs. Initially every valid fixture invocation returns the documented exit-3 placeholder; after implementation, each should print its report and exit as specified above.
 
 ```sh
-python app.py --input inputs/primary.json
-python app.py --input inputs/secondary.json
+python3 app.py --input inputs/primary.json
+python3 app.py --input inputs/secondary.json
 ```
 
 ## Time and AI use
@@ -74,4 +70,3 @@ Submit an archive or repository containing runnable source, tests, the supplied 
 You do not need a public repository, deployment, PDF or proprietary tools. Document incomplete behavior honestly. Do not submit only a design or report: the runnable feature and reproducible tests are the primary deliverables.
 
 Published scoring: **usable result 40, accuracy/verification 25, prioritization 20, communication/handoff 15**. Full marks are available on the core alone. Tool choice, AI-detector judgments, prose polish, hours worked and sheer output volume are not scored.
-

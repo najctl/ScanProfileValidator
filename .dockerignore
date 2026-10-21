@@ -1,0 +1,12 @@
+# Send only the files required to build and verify the local runner.
+**
+!Dockerfile
+!app.py
+!validator.py
+!diagnostics.py
+!inputs/
+!inputs/primary.json
+!inputs/secondary.json
+!inputs/malformed-input.txt
+!tests/
+!tests/app_test.py

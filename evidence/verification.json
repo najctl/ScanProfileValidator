@@ -7,7 +7,7 @@
       "command": "python -m unittest discover -s tests -p \"*_test.py\" -v",
       "exit_code": 0,
       "test_methods": 18,
-      "unittest_reported_seconds": 4.681
+      "unittest_reported_seconds": 5.114
     },
     {
       "name": "primary",
@@ -41,18 +41,341 @@
   ],
   "files_sha256": {
     "app.py": "deb7dc06356bdb7dd565060b111ec250eede70f7791ac88db8d426e7addeeca2",
-    "validator.py": "e57222795448bfde04eaf5fcf6c409693892eeeac40e9e2c608a2d4470d53f1e",
-    "diagnostics.py": "e8c0f81f558bb0b799525347fe7c57fc61d8e9ea3dd824cb41123c38670ef60f",
-    "README.md": "8654f28c5fc76e204f97d94969b71dd0aafd6a3662aa0d7ef5c1a19454e567e2",
-    "SUBMISSION.md": "b9ee4cfb8cfcdb740faf9a33ec7d61d97e34da75a04be4cfe0aa65a00fca5746",
-    "WALKTHROUGH.md": "71c40ac609164d38b46ccb5a56079a9e36519828671728857d2d6cd0551218a5",
-    "tests/app_test.py": "d0a79bb35cf9738c684a5d80cb2b082c95c3c5b106974d3643909287afeb766e",
+    "validator.py": "855ecc442c4512fd95f0ff19500276a9374b31a44575f90833cfe634afa96adf",
+    "diagnostics.py": "92c4c23f6516ed5cfe9b8b36cb000e18868fdaa9d098b9b4e85cf853407090e0",
+    "README.md": "b264abdd5079b4b74906113b688fde02024fec9a81a4772352d48e2428212cdb",
+    "SUBMISSION.md": "8c7e12aeb9fd96016251873d91f76e9c0f7e2bd0f409a70a0d7b347c161f6c07",
+    "WALKTHROUGH.md": "bff73be2e15beefba482f1921db9c28872398831c2e3e84a8d8a9a365b5aac34",
+    "tests/app_test.py": "073f1c20b795202e94ba4801da4e506c3677f4b4688e2cab561b73d32655d7b9",
     "inputs/primary.json": "16bb9cff13c2294b7edba02a7301a4c2a98577de50d67da281382efd629b4f65",
     "inputs/secondary.json": "fc22f140c10cd456cf38b17c0ff15b91fb097e3a77316180f2c34189f2e64f26",
     "inputs/malformed-input.txt": "168e4d1efa2ff7a96d7cc21162069fe7fd445ec9ae7923c819050516b63bfc8c",
-    "evidence/tests.txt": "ec78479ed27f1b4bdb1cfea83f2e298c30085aa1ee0982628d93d7cb76e2820b",
+    "evidence/tests.txt": "46d44e5040df9fed0b987d500683357500a5b720ada3190669e2dc8075ec582b",
     "evidence/primary-report.json": "bf6a24ecb7570aa74ccc283489caaf7749437c5851ba204dc93dcc8ad148f0a8",
     "evidence/secondary-report.json": "479bcb28a02cddf1e0d899cf29ef9be6ae329e3dece3f2cebb9fd47f82ff0e8e",
-    "evidence/malformed-error.txt": "5612600c529c7ddc7b5ba1b4305441df47a0f1280e6de4ad15cce0f492e11141"
+    "evidence/malformed-error.txt": "5612600c529c7ddc7b5ba1b4305441df47a0f1280e6de4ad15cce0f492e11141",
+    "Dockerfile": "7b5fafb56ba4f6f588299091a26c99587debae5bf2f88dbfcb69c09dff44b3a2",
+    ".dockerignore": "9ebed02743ed22a710efbfbc4a035fee552f71d043494586c465325ea7e0fe83",
+    "compose.yaml": "c29f0f96dad83b98c3af6b1903cf3d846c40e9388dbaaa36ef07eec7674a01b2"
+  },
+  "docker": {
+    "image_tag": "scan-profile-validator",
+    "image_id": "sha256:f1890d25593521e48eee8204fc608989e04459117151187181538af25b8f5cf1",
+    "base_image": "python:3.13-slim@sha256:6771159cd4fa5d9bba1258caf0b82e6b73458c694d178ad97c5e925c2d0e1a91",
+    "docker_client_version": "29.4.3",
+    "docker_server_version": "29.4.3",
+    "container_user": "10001:10001",
+    "source_sha256": {
+      "app.py": "deb7dc06356bdb7dd565060b111ec250eede70f7791ac88db8d426e7addeeca2",
+      "validator.py": "855ecc442c4512fd95f0ff19500276a9374b31a44575f90833cfe634afa96adf",
+      "diagnostics.py": "92c4c23f6516ed5cfe9b8b36cb000e18868fdaa9d098b9b4e85cf853407090e0",
+      "tests/app_test.py": "073f1c20b795202e94ba4801da4e506c3677f4b4688e2cab561b73d32655d7b9"
+    },
+    "build": {
+      "command": "docker compose build",
+      "exit_code": 0,
+      "test_methods": 18,
+      "unittest_reported_seconds": 6.115
+    },
+    "runs": [
+      {
+        "name": "tests",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "--tmpfs",
+          "/tmp:rw,noexec,nosuid,size=16m",
+          "--entrypoint",
+          "python",
+          "scan-profile-validator",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "*_test.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "test_methods": 18,
+        "unittest_reported_seconds": 6.622
+      },
+      {
+        "name": "primary",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "scan-profile-validator",
+          "--input",
+          "inputs/primary.json"
+        ],
+        "exit_code": 1,
+        "matches_native_report": true,
+        "summary": {
+          "errors": 13,
+          "invalid": 5,
+          "profiles": 7,
+          "valid": 2,
+          "warnings": 2
+        }
+      },
+      {
+        "name": "secondary",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "scan-profile-validator",
+          "--input",
+          "inputs/secondary.json"
+        ],
+        "exit_code": 1,
+        "matches_native_report": true,
+        "summary": {
+          "errors": 5,
+          "invalid": 3,
+          "profiles": 4,
+          "valid": 1,
+          "warnings": 1
+        }
+      },
+      {
+        "name": "malformed",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "scan-profile-validator",
+          "--input",
+          "inputs/malformed-input.txt"
+        ],
+        "exit_code": 2
+      },
+      {
+        "name": "help",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "scan-profile-validator",
+          "--help"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "default_input",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "scan-profile-validator"
+        ],
+        "exit_code": 1
+      },
+      {
+        "name": "read_only_host_input",
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--read-only",
+          "--mount",
+          "type=bind,source=<project-directory>,target=/data,readonly",
+          "scan-profile-validator",
+          "--input",
+          "/data/inputs/primary.json"
+        ],
+        "exit_code": 1,
+        "matches_native_report": true
+      }
+    ]
+  },
+  "compose": {
+    "configuration": {
+      "name": "scan-profile-validator",
+      "services": {
+        "validator": {
+          "build": {
+            "context": "<project-directory>",
+            "dockerfile": "Dockerfile"
+          },
+          "cap_drop": [
+            "ALL"
+          ],
+          "command": null,
+          "entrypoint": null,
+          "image": "scan-profile-validator",
+          "network_mode": "none",
+          "read_only": true,
+          "security_opt": [
+            "no-new-privileges:true"
+          ],
+          "tmpfs": [
+            "/tmp:rw,noexec,nosuid,size=16m"
+          ],
+          "user": "10001:10001"
+        }
+      }
+    },
+    "runs": [
+      {
+        "name": "tests",
+        "command": [
+          "docker",
+          "compose",
+          "run",
+          "--rm",
+          "--entrypoint",
+          "python",
+          "validator",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "*_test.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "test_methods": 18,
+        "unittest_reported_seconds": 6.493
+      },
+      {
+        "name": "primary",
+        "command": [
+          "docker",
+          "compose",
+          "run",
+          "--rm",
+          "validator",
+          "--input",
+          "inputs/primary.json"
+        ],
+        "exit_code": 1,
+        "matches_native_report": true,
+        "summary": {
+          "errors": 13,
+          "invalid": 5,
+          "profiles": 7,
+          "valid": 2,
+          "warnings": 2
+        }
+      },
+      {
+        "name": "secondary",
+        "command": [
+          "docker",
+          "compose",
+          "run",
+          "--rm",
+          "validator",
+          "--input",
+          "inputs/secondary.json"
+        ],
+        "exit_code": 1,
+        "matches_native_report": true,
+        "summary": {
+          "errors": 5,
+          "invalid": 3,
+          "profiles": 4,
+          "valid": 1,
+          "warnings": 1
+        }
+      },
+      {
+        "name": "malformed",
+        "command": [
+          "docker",
+          "compose",
+          "run",
+          "--rm",
+          "validator",
+          "--input",
+          "inputs/malformed-input.txt"
+        ],
+        "exit_code": 2
+      },
+      {
+        "name": "help",
+        "command": [
+          "docker",
+          "compose",
+          "run",
+          "--rm",
+          "validator",
+          "--help"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "default_input",
+        "command": [
+          "docker",
+          "compose",
+          "run",
+          "--rm",
+          "validator"
+        ],
+        "exit_code": 1
+      }
+    ],
+    "runtime_security": {
+      "uid": 10001,
+      "capabilities": "0000000000000000",
+      "no_new_privileges": "1",
+      "app_filesystem_read_only": true
+    }
+  },
+  "report_storage": "One canonical report per fixture; Docker and Compose reports were compared in full and matched these reports.",
+  "fix_verification": {
+    "issue": "Secret text could survive in diagnostic paths for unusual object keys.",
+    "change": "Detect secret-prefixed unknown keys and redact decoded path components before escaping.",
+    "existing_test_methods_extended": [
+      "test_secrets_at_depth_and_in_name",
+      "test_cli_secret_redaction",
+      "test_redaction_does_not_rewrite_its_own_marker"
+    ],
+    "test_method_count": 18,
+    "covered_cases": [
+      "unknown profile keys",
+      "unknown auth keys",
+      "nested keys",
+      "quotes",
+      "backslashes",
+      "newlines",
+      "Unicode",
+      "known secret embedded in another key",
+      "one error when key and value share a path",
+      "stable replacement marker"
+    ],
+    "regression_cases_failed_before_fix": true,
+    "native_cases_pass_after_fix": true,
+    "additional_in_memory_key_variations_passed": 100,
+    "docker_cases_pass_after_fix": true,
+    "compose_cases_pass_after_fix": true
   }
 }
