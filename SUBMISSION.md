@@ -83,7 +83,7 @@ The paths below are relative to `$.profiles[index]`.
 | --- | --- | --- |
 | 0 · api-nightly | None | None |
 | 1 · portal-weekly | None | `owner`: unknown_field |
-| 2 · API-Nightly | `name`: duplicate,| invalid; `schedule`: invalid; `max_duration_minutes`: type | None |
+| 2 · API-Nightly | `name`: duplicate, invalid; `schedule`: invalid; `max_duration_minutes`: type | None |
 | 3 · billing-scan | `auth.token_ref`: secret | None |
 | 4 · partner-export | `target`: invalid; `auth.token_ref`: not_allowed | None |
 | 5 · search-crawl | `target`: invalid; `exclude_paths[1]`: invalid; `exclude_paths[2]`: duplicate | None |
