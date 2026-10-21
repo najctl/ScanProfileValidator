@@ -1,44 +1,36 @@
-# Scan profile validator
+# Scan profile validator — submission report
 
-**A local Python CLI that catches invalid scan settings before submission and reports where to fix them.**
+A Python command-line tool that validates scan configurations before submission. It reports every detected problem with a precise JSON path, separates errors from warnings, and hides detected secret values in display text. It reads local files and does not scan websites or contact external systems.
 
-The implementation validates every supplied profile against its file's policy, reports errors separately from warnings, and protects detected credential values in displayed output. It performs no scans or network requests. Python 3.10+ and the standard library are sufficient.
+This report follows the README's requested handoff: a run guide, a decision/work log, an AI-use note, and a written walkthrough.
 
-**Verified result:** 18 automated tests pass. The primary fixture matches the assignment's exact totals and per-profile error counts. The same validator handles the secondary fixture without code changes.
+## 1. Run guide and verification
 
-## Start here
+### Requirements and commands
 
-Run these commands from the extracted project directory:
+Python 3.10 or later is sufficient. No additional packages or accounts are required. Run from the extracted project directory:
 
 ```sh
+python --version
+python app.py --help
 python -m unittest discover -s tests -p "*_test.py" -v
 python app.py --input inputs/primary.json
 python app.py --input inputs/secondary.json
 ```
 
-Use `python3` instead of `python` if that is your Python 3 interpreter's name. The recorded execution environment was Python 3.13.2 on Windows. No dependency installation is needed.
+Use `python3` if that is the name of your Python 3 interpreter. Recorded verification used Python 3.13.2 on Windows.
 
-The tests should finish with **`Ran 18 tests` and `OK`**. Both supplied batches deliberately contain invalid profiles, so both CLI runs produce JSON and **exit 1**. This is the expected validation result, not a crash.
+The test command should finish with `Ran 18 tests` and `OK`. Both fixture commands should print JSON and exit **1** because their input deliberately contains invalid settings.
 
-| Reviewer task | Where to look |
-| --- | --- |
-| Inspect the implementation | [app.py](app.py), especially `validate_profiles` |
-| Check assertions and boundary cases | [tests/app_test.py](tests/app_test.py) |
-| Compare recorded results | [Verification record](evidence/verification.json), [test output](evidence/tests.txt) |
-| Inspect complete reports | [Primary report](evidence/primary-report.json), [secondary report](evidence/secondary-report.json) |
-| Read the walkthrough instead of watching a video | [WALKTHROUGH.md](WALKTHROUGH.md) |
-| Consult the assessment requirements | [README.md](README.md#core-task-and-observable-acceptance-criteria) |
+| Command or input | Expected result | Exit code |
+| --- | --- | ---: |
+| Unit suite | 18 passing test methods | 0 |
+| Primary input | 7 profiles; 2 valid; 5 invalid; 13 errors; 2 warnings | 1 |
+| Secondary input | 4 profiles; 1 valid; 3 invalid; 5 errors; 1 warning | 1 |
 
-## Using the result
+The primary expectations come directly from the README. Secondary expectations were derived by checking every supplied profile against the written rules and its own policy; the README does not supply secondary totals.
 
-```sh
-python app.py --help
-python app.py --input inputs/primary.json
-```
-
-`--input` selects a UTF-8 JSON file; it defaults to `inputs/primary.json`. The report keeps input profile order. Each profile includes its index, name, validity, and diagnostic lists; the final summary provides batch totals. Errors and warnings sort by path, then code.
-
-A representative primary diagnostic is:
+### Reading a diagnostic
 
 ```json
 {
@@ -48,88 +40,115 @@ A representative primary diagnostic is:
 }
 ```
 
-This points to the third profile's duration. Its supplied value is a boolean; the contract requires an integer. A caller can locate the exact field without searching through the batch. Warnings such as `$.profiles[1].owner` flag unknown fields without making the profile invalid.
+This identifies the third profile's duration: the supplied value is a boolean, while the rule requires an integer. Indexes start at zero. A profile is valid when its error list is empty; warnings do not invalidate it. Diagnostic lists sort by path, then code, and profiles retain input order.
 
-| Exit | Meaning | Output |
-| ---: | --- | --- |
-| 0 | Every profile is valid, including an empty batch | JSON report on stdout |
-| 1 | At least one profile has errors | JSON report on stdout |
-| 2 | File, JSON syntax, or input-structure failure | Readable error on stderr; no stdout |
+### Primary input: errors
 
-To verify the fatal-error behavior:
+Each row below represents exactly one error, including when two errors concern the same field. Primary profile 0 (`api-nightly`) has no diagnostics. Profile 1 (`portal-weekly`) has no errors and remains valid with its warning.
+
+| JSON path | Code | Explanation |
+| --- | --- | --- |
+| `$.profiles[2].max_duration_minutes` | `type` | The supplied boolean is not an integer duration. |
+| `$.profiles[2].name` | `duplicate` | The name repeats profile 0 when compared ignoring case. |
+| `$.profiles[2].name` | `invalid` | Uppercase letters violate the required lowercase name format. |
+| `$.profiles[2].schedule` | `invalid` | 7:30 needs a two-digit hour: 07:30. |
+| `$.profiles[3].auth.token_ref` | `secret` | The value starts with a configured secret prefix; its contents are hidden. |
+| `$.profiles[4].auth.token_ref` | `not_allowed` | Recorded authentication does not use token_ref. |
+| `$.profiles[4].target` | `invalid` | The parsed hostname is relay.example, outside the allowed suffixes. |
+| `$.profiles[5].exclude_paths[1]` | `invalid` | static does not start with a slash. |
+| `$.profiles[5].exclude_paths[2]` | `duplicate` | This repeats the earlier /admin entry. |
+| `$.profiles[5].target` | `invalid` | The URL uses HTTP instead of HTTPS. |
+| `$.profiles[6].api_key` | `secret` | The value starts with a configured secret prefix; its contents are hidden. |
+| `$.profiles[6].auth.token_ref` | `missing` | Bearer authentication requires token_ref. |
+| `$.profiles[6].schedule` | `missing` | The required schedule field is absent. |
+
+### Primary input: warnings
+
+| JSON path | Code | Explanation |
+| --- | --- | --- |
+| `$.profiles[1].owner` | `unknown_field` | owner is not a recognized profile field. |
+| `$.profiles[6].api_key` | `unknown_field` | api_key is not a recognized profile field. |
+
+### Secondary input: errors
+
+Profile 0 (`mobile-api-daily`) passes without diagnostics, including the valid lower duration boundary of 5 minutes and the midnight schedule. Profiles 1, 2 and 3 are invalid for the reasons below. The same validator is used without changes.
+
+| JSON path | Code | Explanation |
+| --- | --- | --- |
+| `$.profiles[1].max_duration_minutes` | `invalid` | 241 exceeds the maximum duration of 240. |
+| `$.profiles[1].target` | `invalid` | The hostname does not end with this file's allowed mobile suffix. |
+| `$.profiles[2].auth.recording_id` | `not_allowed` | Authentication type none does not use recording_id. |
+| `$.profiles[2].max_duration_minutes` | `type` | 45.0 is a JSON floating-point number, not an integer. |
+| `$.profiles[3].auth.token` | `secret` | The value starts with a configured secret prefix; its contents are hidden. |
+
+### Secondary input: warnings
+
+| JSON path | Code | Explanation |
+| --- | --- | --- |
+| `$.profiles[3].auth.token` | `unknown_field` | token is not a recognized auth field. |
+
+### Fatal input and exit codes
 
 ```sh
 python app.py --input inputs/malformed-input.txt
 ```
 
-It should exit 2 with a line/column diagnostic, without printing input contents or a traceback. In PowerShell, run `$LASTEXITCODE` immediately after a CLI command to inspect its exit status; in a POSIX shell, use `echo $?`.
+This returns exit **2**, a readable line/column error on stderr and no stdout. Missing files and invalid input structure also return 2. A valid batch, including an empty batch, returns **0** with a JSON report; an invalid batch returns **1** with its report. In PowerShell, inspect `$LASTEXITCODE` immediately after a CLI command; in a POSIX shell, use `echo $?`.
 
-## Verification evidence
+### Recorded evidence and meaningful checks
 
-The files under [evidence/](evidence/) record actual local executions, not illustrative output. The automated tests independently assert expected field paths and codes as well as totals.
+- [tests/app_test.py](tests/app_test.py): executable assertions for CLI behavior and validation results.
+- [evidence/tests.txt](evidence/tests.txt): actual output of the 18 passing tests.
+- [evidence/verification.json](evidence/verification.json): interpreter, commands, exit statuses and summary results.
+- [evidence/primary-report.json](evidence/primary-report.json): complete primary output.
+- [evidence/secondary-report.json](evidence/secondary-report.json): complete secondary output.
+- [evidence/malformed-error.txt](evidence/malformed-error.txt): captured fatal diagnostic.
 
-| Input | Profiles | Valid | Invalid | Errors | Warnings | Exit |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Primary | 7 | 2 | 5 | 13 | 2 | 1 |
-| Secondary | 4 | 1 | 3 | 5 | 1 | 1 |
+The suite asserts exact error paths and codes for both fixtures. Constructed boundary cases accept durations 5 and 240 and reject 4 and 241. Other checks cover boolean and floating-point durations, case-insensitive duplicate names, parsed hostname matching, schedule limits, auth rules, excluded-path duplicates, warnings-only validity, nested secrets, redaction, exit codes 0/1/2, an empty batch, malformed envelopes, deterministic output and unchanged input.
 
-**Expected-result sources:** the assignment explicitly supplies the primary totals and per-profile counts. Secondary expectations were derived by inspecting each input profile against its policy and the written rules; the assignment asks for this reconciliation without providing totals.
+## 2. Decision and work log
 
-The paths below are relative to `$.profiles[index]`.
+### Priorities and deferred work
 
-### Primary: exact reconciliation
+The priority was a usable, reusable validator with reproducible verification. The implementation keeps the existing `--input` interface, reads policy from the payload, and exposes validation through `validate_profiles` in [app.py](app.py). Tests exercise both the function and CLI. The implementation remains standard-library-only.
 
-| Index / name | Error paths and codes | Warning paths |
-| --- | --- | --- |
-| 0 · api-nightly | None | None |
-| 1 · portal-weekly | None | `owner`: unknown_field |
-| 2 · API-Nightly | `name`: duplicate, invalid; `schedule`: invalid; `max_duration_minutes`: type | None |
-| 3 · billing-scan | `auth.token_ref`: secret | None |
-| 4 · partner-export | `target`: invalid; `auth.token_ref`: not_allowed | None |
-| 5 · search-crawl | `target`: invalid; `exclude_paths[1]`: invalid; `exclude_paths[2]`: duplicate | None |
-| 6 · docs-preview | `schedule`: missing; `auth.token_ref`: missing; `api_key`: secret | `api_key`: unknown_field |
+No web service, database, deployment, Docker setup or large architecture was added. These are unnecessary for the required local workflow, and the README awards full marks for the core alone. Verification and a clear handoff took priority over optional features.
 
-### Secondary: policy reuse
+### Obstacle and response: integer validation
 
-| Index / name | Rule violation | Result |
-| --- | --- | --- |
-| 0 · mobile-api-daily | None; duration 5 and midnight are valid boundaries | Valid |
-| 1 · mobile-web-weekly | Host does not match this file's mobile suffix; duration 241 exceeds 240 | 2 errors |
-| 2 · mobile-push | `recording_id` is unused by auth type none; duration 45.0 is a float | 2 errors |
-| 3 · mobile-legacy | Unknown `auth.token` contains a detected secret | 1 error, 1 warning |
+Python treats booleans as instances of int. A normal `isinstance(value, int)` check could therefore accept the primary profile 2 duration incorrectly. Exact type checking rejects it with `type` at `$.profiles[2].max_duration_minutes`. The boundary tests also confirm that real integers at 5 and 240 are accepted.
 
-### What the tests establish
+### Validation and refinement: secret redaction
 
-| Area | Checks |
-| --- | --- |
-| CLI behavior | Help, missing file, truncated JSON, malformed envelopes, exit codes 0/1/2, empty batch |
-| Core rules | Case-insensitive name duplicates, schedule boundaries, authentication references, excluded-path duplicates, unknown-field warnings |
-| Numeric boundaries | 5 and 240 accepted; 4 and 241 rejected; boolean, float, string and null rejected as integer durations |
-| URL interpretation | Uppercase hosts and valid ports accepted; misleading user information, suffix extensions, HTTP and malformed ports rejected |
-| Confidentiality | Nested secret detection, secret names hidden, CLI output checked, diagnostic codes preserved, replacement markers stable |
-| Repeatability | Deterministic reports and unchanged input; exact error-path/code assertions for both fixtures |
+Review found that an early whole-report replacement could change a required diagnostic code if a custom secret value matched the word `type`. A separate case showed that later replacements could alter an inserted `[REDACTED]` marker.
 
-## Decisions and work log
+Two regression tests were added and failed on the old implementation. The fix preserves diagnostic codes and performs a single substitution pass on display text. Both tests pass with the final implementation:
 
-| Decision or obstacle | Response and evidence |
-| --- | --- |
-| Prioritize a usable core | Completed the local CLI, reusable validation function, tests and handoff before optional features. No server, database, deployment or external packages were added. |
-| Python booleans behave like integers | Used exact type checks. Primary `$.profiles[2].max_duration_minutes` receives `type`, while duration 5 remains valid in secondary profile 0. |
-| Allowed-looking text can hide a different hostname | Used `urlsplit(...).hostname`. Primary profile 4 is rejected because the actual hostname is `relay.example`, regardless of the domain before `@`. |
-| Secret suppression must precede ordinary validation | Scan nested values first. Primary `$.profiles[3].auth.token_ref` receives only `secret`, rather than an additional reference-format error. |
-| Review exposed over-redaction | Added two regression tests that failed before the fix: a custom secret value could overwrite the code `type`, and a later replacement could alter an inserted redaction marker. The fix preserves codes and substitutes display text in one pass. Both tests now pass. |
-| Demonstrate reuse rather than fixture-specific answers | Read policy from each payload and reconcile secondary results without changing the validator. |
+- `test_redaction_preserves_diagnostic_codes`
+- `test_redaction_does_not_rewrite_its_own_marker`
 
-### Assumptions and known limits
+### Other decisions supported by fixture evidence
 
-- Policy arrays may be empty because no minimum length is specified. Hostnames are lowercased; configured suffixes are matched literally. A leading-dot suffix requires a subdomain, rather than the bare suffix root.
-- Unknown root/policy keys are ignored. Unknown profile/auth keys generate warnings, and their nested values are still inspected for secrets. Invalid auth types skip dependent reference checks.
-- A secret name is displayed as `[REDACTED]`; a non-string name is displayed as null. Unusual keys use quoted bracket paths. A path containing a detected secret is redacted, prioritizing confidentiality over its exact spelling.
-- Fixed JSON keys, required error codes and the replacement marker remain protocol text. A custom policy that classifies one of those exact words as a secret creates a specification conflict; the implementation preserves the required protocol while redacting input-derived display text. This qualification does not affect the supplied fixtures.
-- Detection follows the configured string-prefix rule, not a general credential-detection heuristic. There is no DNS lookup or credential verification. Very large or deeply nested inputs have no explicit resource limits; those limits and related tests would be the next improvement if broader input sizes were required.
+- **Parse the hostname:** primary profile 4 is rejected because its real host is `relay.example`; the allowed-looking domain before `@` is user information.
+- **Find secrets before other checks:** primary `$.profiles[3].auth.token_ref` receives only `secret`, without an additional format error at that path.
+- **Apply each file's policy:** secondary profile 1 is rejected under the narrower mobile suffix, without modifying the code.
 
-## AI-use disclosure
+### Assumptions, known limits and next step
 
-Codex was used to explain the assignment and assist with implementation, tests, review and documentation. Its output was checked against the written rules, both supplied fixtures and executed automated tests. The candidate also reran the test suite and both fixture commands and inspected the results during the assisted session.
+- Empty policy arrays are accepted because the specification gives no minimum length. Hostnames are lowercased and configured suffixes are matched literally. A leading-dot suffix requires a subdomain.
+- Unknown root/policy keys are ignored. Unknown profile/auth keys generate warnings. Their nested values are still checked for secrets. Invalid auth types skip dependent reference checks.
+- Secret names and secret text in paths are redacted; non-string names become null. Unusual keys use quoted bracket paths. Redacting a path prioritizes confidentiality over preserving its exact spelling.
+- Fixed JSON keys, required diagnostic codes and the redaction marker remain protocol text. A custom policy that labels these exact words as secrets conflicts with the required output vocabulary; the implementation preserves the protocol and redacts input-derived display text. The supplied policies do not create this conflict.
+- Detection follows the requested prefix rule, rather than a general credential detector. No remote validation occurs. Very large or deeply nested inputs have no explicit resource limits. Adding size/depth limits and tests would be the next step if broader input sizes were required.
 
-A concrete corrected AI output was the original whole-report redaction pass. Review showed it could replace a required diagnostic code when a custom secret value was the word `type`. Two regression tests reproduced redaction defects before the change, then passed after narrowing replacement to display text and using a single substitution pass. The final suite contains 18 passing test methods. No private prompt history, account access or real credentials are included.
+## 3. AI-use note
+
+- I used Codex to help me understand the requirements and as a coding, testing and documentation assistant. It assisted with the implementation; I do not claim the code was written without AI.
+- I directed the work through requests for implementation, a second review, corrections, verification instructions and clearer submission material. I asked for explanations when I did not understand a result.
+- I ran the unit suite and both supplied fixture commands locally, then shared the terminal output for review. The run showed 18 passing test methods and the expected primary and secondary reports.
+- One concrete corrected AI output was the broad redaction step. Review found it could overwrite the diagnostic code `type` and could rewrite its own replacement marker. Two regression tests reproduced the defects before correction and passed afterward; these checks are included in the final suite.
+- The solution uses only Python's standard library. No Docker, persistence layer or multi-module architecture was implemented or claimed. I remain responsible for understanding and reviewing the final submission and checking that the delivered behavior follows the README.
+
+## 4. Accessible walkthrough
+
+[WALKTHROUGH.md](WALKTHROUGH.md) is the written alternative to the requested 3–5 minute recording. It explains the core workflow, representative diagnostics, a URL edge case, redaction refinement and reproducible execution evidence. The walkthrough and recorded evidence accompany the runnable source, tests and supplied inputs in the submission archive.
