@@ -12,7 +12,7 @@ Start with:
 python app.py --input inputs/primary.json
 ```
 
-The CLI loads the file as UTF-8 JSON, then calls `validate_profiles`. That function can also be imported by another Python caller. Its first responsibility is to check the input structure: an object containing a policy and an array of profile objects. If that structure is unusable, the CLI exits 2 and prints a readable error to stderr without a report on stdout.
+The CLI in `app.py` loads the file as UTF-8 JSON, then calls `validate_profiles` in `validator.py`. `diagnostics.py` owns JSON paths, safe output formatting, sorting and summary totals. That function can also be imported by another Python caller. Its first responsibility is to check the input structure: an object containing a policy and an array of profile objects. If that structure is unusable, the CLI exits 2 and prints a readable error to stderr without a report on stdout.
 
 ## 2. Validation and the report
 

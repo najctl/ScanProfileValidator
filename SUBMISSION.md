@@ -22,11 +22,12 @@ Use `python3` if that is the name of your Python 3 interpreter. Recorded verific
 
 The test command should finish with `Ran 18 tests` and `OK`. Both fixture commands should print JSON and exit **1** because their input deliberately contains invalid settings.
 
-| Command or input | Expected result | Exit code |
-| --- | --- | ---: |
-| Unit suite | 18 passing test methods | 0 |
-| Primary input | 7 profiles; 2 valid; 5 invalid; 13 errors; 2 warnings | 1 |
-| Secondary input | 4 profiles; 1 valid; 3 invalid; 5 errors; 1 warning | 1 |
+**Automated checks:** 18 passing test methods; exit 0.
+
+| Input | Profiles | Valid | Invalid | Errors | Warnings | Exit |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Primary | 7 | 2 | 5 | 13 | 2 | 1 |
+| Secondary | 4 | 1 | 3 | 5 | 1 | 1 |
 
 The primary expectations come directly from the README. Secondary expectations were derived by checking every supplied profile against the written rules and its own policy; the README does not supply secondary totals.
 
@@ -42,50 +43,32 @@ The primary expectations come directly from the README. Secondary expectations w
 
 This identifies the third profile's duration: the supplied value is a boolean, while the rule requires an integer. Indexes start at zero. A profile is valid when its error list is empty; warnings do not invalidate it. Diagnostic lists sort by path, then code, and profiles retain input order.
 
-### Primary input: errors
+### Primary input: profile results
 
-Each row below represents exactly one error, including when two errors concern the same field. Primary profile 0 (`api-nightly`) has no diagnostics. Profile 1 (`portal-weekly`) has no errors and remains valid with its warning.
+Field paths are relative to `$.profiles[index]`. Each diagnostic appears on its own line within the profile row. A profile with no errors is valid, even when it has warnings.
 
-| JSON path | Code | Explanation |
+| Index / name | Errors | Warnings |
 | --- | --- | --- |
-| `$.profiles[2].max_duration_minutes` | `type` | The supplied boolean is not an integer duration. |
-| `$.profiles[2].name` | `duplicate` | The name repeats profile 0 when compared ignoring case. |
-| `$.profiles[2].name` | `invalid` | Uppercase letters violate the required lowercase name format. |
-| `$.profiles[2].schedule` | `invalid` | 7:30 needs a two-digit hour: 07:30. |
-| `$.profiles[3].auth.token_ref` | `secret` | The value starts with a configured secret prefix; its contents are hidden. |
-| `$.profiles[4].auth.token_ref` | `not_allowed` | Recorded authentication does not use token_ref. |
-| `$.profiles[4].target` | `invalid` | The parsed hostname is relay.example, outside the allowed suffixes. |
-| `$.profiles[5].exclude_paths[1]` | `invalid` | static does not start with a slash. |
-| `$.profiles[5].exclude_paths[2]` | `duplicate` | This repeats the earlier /admin entry. |
-| `$.profiles[5].target` | `invalid` | The URL uses HTTP instead of HTTPS. |
-| `$.profiles[6].api_key` | `secret` | The value starts with a configured secret prefix; its contents are hidden. |
-| `$.profiles[6].auth.token_ref` | `missing` | Bearer authentication requires token_ref. |
-| `$.profiles[6].schedule` | `missing` | The required schedule field is absent. |
+| 0 · api-nightly | None | None |
+| 1 · portal-weekly | None | `owner` → unknown_field |
+| 2 · API-Nightly | `max_duration_minutes` → type<br>`name` → duplicate<br>`name` → invalid<br>`schedule` → invalid | None |
+| 3 · billing-scan | `auth.token_ref` → secret | None |
+| 4 · partner-export | `auth.token_ref` → not_allowed<br>`target` → invalid | None |
+| 5 · search-crawl | `exclude_paths[1]` → invalid<br>`exclude_paths[2]` → duplicate<br>`target` → invalid | None |
+| 6 · docs-preview | `api_key` → secret<br>`auth.token_ref` → missing<br>`schedule` → missing | `api_key` → unknown_field |
 
-### Primary input: warnings
+### Secondary input: profile results
 
-| JSON path | Code | Explanation |
+Field paths are relative to `$.profiles[index]`. Each diagnostic appears on its own line within the profile row. A profile with no errors is valid, even when it has warnings.
+
+The same code applies this file's narrower mobile policy without changes.
+
+| Index / name | Errors | Warnings |
 | --- | --- | --- |
-| `$.profiles[1].owner` | `unknown_field` | owner is not a recognized profile field. |
-| `$.profiles[6].api_key` | `unknown_field` | api_key is not a recognized profile field. |
-
-### Secondary input: errors
-
-Profile 0 (`mobile-api-daily`) passes without diagnostics, including the valid lower duration boundary of 5 minutes and the midnight schedule. Profiles 1, 2 and 3 are invalid for the reasons below. The same validator is used without changes.
-
-| JSON path | Code | Explanation |
-| --- | --- | --- |
-| `$.profiles[1].max_duration_minutes` | `invalid` | 241 exceeds the maximum duration of 240. |
-| `$.profiles[1].target` | `invalid` | The hostname does not end with this file's allowed mobile suffix. |
-| `$.profiles[2].auth.recording_id` | `not_allowed` | Authentication type none does not use recording_id. |
-| `$.profiles[2].max_duration_minutes` | `type` | 45.0 is a JSON floating-point number, not an integer. |
-| `$.profiles[3].auth.token` | `secret` | The value starts with a configured secret prefix; its contents are hidden. |
-
-### Secondary input: warnings
-
-| JSON path | Code | Explanation |
-| --- | --- | --- |
-| `$.profiles[3].auth.token` | `unknown_field` | token is not a recognized auth field. |
+| 0 · mobile-api-daily | None | None |
+| 1 · mobile-web-weekly | `max_duration_minutes` → invalid<br>`target` → invalid | None |
+| 2 · mobile-push | `auth.recording_id` → not_allowed<br>`max_duration_minutes` → type | None |
+| 3 · mobile-legacy | `auth.token` → secret | `auth.token` → unknown_field |
 
 ### Fatal input and exit codes
 
@@ -110,9 +93,21 @@ The suite asserts exact error paths and codes for both fixtures. Constructed bou
 
 ### Priorities and deferred work
 
-The priority was a usable, reusable validator with reproducible verification. The implementation keeps the existing `--input` interface, reads policy from the payload, and exposes validation through `validate_profiles` in [app.py](app.py). Tests exercise both the function and CLI. The implementation remains standard-library-only.
+The priority was a usable, reusable validator with reproducible verification. The implementation keeps the existing `--input` interface, reads policy from the payload, and exposes validation through `validate_profiles` in [validator.py](validator.py). Tests exercise both the function and CLI. The implementation remains standard-library-only.
 
 No web service, database, deployment, Docker setup or large architecture was added. These are unnecessary for the required local workflow, and the README awards full marks for the core alone. Verification and a clear handoff took priority over optional features.
+
+### Module boundaries
+
+The code is separated by responsibility so validation can be reused without CLI or file handling:
+
+| Module | Responsibility |
+| --- | --- |
+| [app.py](app.py) | Parse arguments, read UTF-8 JSON, handle fatal errors, print the report and choose the exit code. |
+| [validator.py](validator.py) | Validate the input structure, apply policy and field rules, and collect all profile diagnostics. |
+| [diagnostics.py](diagnostics.py) | Build JSON paths, redact report text, sort diagnostics and calculate summary counts. |
+
+The processing flow is `app.py → validator.py → diagnostics.py`. Diagnostic formatting does not read files or import the CLI. Validation has no command-line or filesystem dependency. Tests exercise the reusable function and the existing command interface. This split keeps ownership clear without adding a framework or dependencies.
 
 ### Obstacle and response: integer validation
 
@@ -143,11 +138,12 @@ Two regression tests were added and failed on the old implementation. The fix pr
 
 ## 3. AI-use note
 
-- I used Codex to help me understand the requirements and as a coding, testing and documentation assistant. It assisted with the implementation; I do not claim the code was written without AI.
-- I directed the work through requests for implementation, a second review, corrections, verification instructions and clearer submission material. I asked for explanations when I did not understand a result.
-- I ran the unit suite and both supplied fixture commands locally, then shared the terminal output for review. The run showed 18 passing test methods and the expected primary and secondary reports.
-- One concrete corrected AI output was the broad redaction step. Review found it could overwrite the diagnostic code `type` and could rewrite its own replacement marker. Two regression tests reproduced the defects before correction and passed afterward; these checks are included in the final suite.
-- The solution uses only Python's standard library. No Docker, persistence layer or multi-module architecture was implemented or claimed. I remain responsible for understanding and reviewing the final submission and checking that the delivered behavior follows the README.
+- I directed the implementation and review against the README's contract. I chose a three-module split for clear ownership of command-line handling, validation rules and diagnostic formatting, while keeping the solution simple and standard-library-only.
+- I used Codex as a coding and documentation assistant to implement and revise the solution. I requested focused changes, a second requirements review, fixes and improvements to the submission structure.
+- One concrete validation check was `max_duration_minutes=True`: Python treats booleans as integers, but this contract requires a type error. I verified the final behavior by running the fixture commands and unit suite locally and reviewing the results.
+- One corrected AI output was the broad redaction pass. Review exposed changes to the required code `type` and to inserted redaction markers. I requested the fix; two regression tests reproduced the problems before correction and passed afterward.
+- I refined my instructions when the report layout did not match the intended handoff. I requested results grouped by profile, with each diagnostic on its own line, and a separation of code responsibilities into three Python files.
+- Codex accelerated implementation and documentation. I remain responsible for the final review, accepted changes, testing and submission. The verification record includes 18 passing test methods and both fixture reports.
 
 ## 4. Accessible walkthrough
 
