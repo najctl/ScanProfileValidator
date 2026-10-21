@@ -25,6 +25,9 @@ def main():
     except json.JSONDecodeError as error:
         print(f'error: malformed JSON at line {error.lineno}, column {error.colno}', file=sys.stderr)
         return 2
+    except RecursionError:
+        print('error: input nesting exceeds the JSON parser limit', file=sys.stderr)
+        return 2
     except ValueError as error:
         print(f'error: {error}', file=sys.stderr)
         return 2

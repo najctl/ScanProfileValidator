@@ -1,59 +1,131 @@
-# Written walkthrough
+# WALKTHROUGH.md — Follow one example
 
-This is the accessible text alternative to the requested 3–5 minute recording. Follow the commands from the project directory to reproduce the demonstration.
+This document demonstrates the program using one profile from the supplied input. It is the written alternative to the requested walkthrough recording.
 
-## 1. Purpose and entry point
+## 1. Look at the input
 
-This tool validates scan settings before a separate scanning system would use them. It reads a local JSON file and produces a JSON report. It does not scan websites, schedule jobs, resolve hostnames, or retrieve credentials.
+Open `inputs/primary.json`.
 
-Start with:
+It contains a `policy` object and a `profiles` list. The policy defines allowed hostname suffixes and secret prefixes. Each item in `profiles` is one scan configuration.
 
-```sh
+The third profile contains:
+
+```json
+{
+  "name": "API-Nightly",
+  "target": "https://api.north-staging.example.test/",
+  "schedule": "daily 7:30",
+  "auth": {
+    "type": "none"
+  },
+  "max_duration_minutes": true
+}
+```
+
+These are the settings the program will check. They contain deliberate mistakes.
+
+## 2. Run the command
+
+From the project directory:
+
+```powershell
 python app.py --input inputs/primary.json
 ```
 
-The CLI in `app.py` loads the file as UTF-8 JSON, then calls `validate_profiles` in `validator.py`. `diagnostics.py` owns JSON paths, safe output formatting, sorting and summary totals. That function can also be imported by another Python caller. Its first responsibility is to check the input structure: an object containing a policy and an array of profile objects. If that structure is unusable, the CLI exits 2 and prints a readable error to stderr without a report on stdout.
+`app.py` reads the file and converts the JSON into Python data. It passes that data to `validator.py`, which applies the rules. `diagnostics.py` prepares the final report.
 
-## 2. Validation and the report
+No website is contacted.
 
-Each profile is checked against the README rules and the policy carried by its own file. Names have format and uniqueness requirements; URLs require HTTPS and an allowed parsed hostname; schedules require exact day/time formatting; durations must be integers between 5 and 240. Authentication type determines which reference is required and which references are forbidden. Excluded paths must be strings beginning with a slash, without exact repetitions.
+## 3. Find this profile in the report
 
-The primary report's first profile is valid and has empty diagnostic lists. Profile 1 is also valid, despite a warning for its unknown `owner` field. This demonstrates the distinction between warnings and errors.
+Look for:
 
-Profile 2 has four errors: its uppercase name is invalid and repeats the earlier name ignoring case; its schedule has a one-digit hour; its duration is a boolean. The precise path `$.profiles[2].max_duration_minutes` identifies the third profile's duration. Python treats booleans as instances of int, so validation uses an exact integer type check to avoid accepting them accidentally.
+```json
+"index": 2,
+"name": "API-Nightly",
+"valid": false
+```
 
-Problems are collected rather than stopping at the first error. Profiles retain input order; errors and warnings sort by path and code. The final summary counts profiles, validity, errors and warnings. Primary totals are 7 profiles, 2 valid, 5 invalid, 13 errors and 2 warnings, exactly as required by the assignment. Exit 1 communicates invalid settings while still returning the usable JSON report.
+Index `2` means the third profile because indexes start at zero.
 
-## 3. Two important edge cases
+`valid: false` means the program found at least one error. This profile has **four**:
 
-Primary profile 4 contains an allowed-looking domain before an at-sign. That portion is URL user information; its actual hostname is `relay.example`. Parsing the hostname, rather than searching the full URL for a domain substring, correctly rejects it.
+| Field | Code | Why it fails |
+| --- | --- | --- |
+| `max_duration_minutes` | `type` | `true` is a boolean; the rule requires an integer. |
+| `name` | `duplicate` | Profile 0 already uses `api-nightly`; uniqueness ignores case. |
+| `name` | `invalid` | The required name format allows lowercase letters, not uppercase. |
+| `schedule` | `invalid` | The hour needs two digits: `07:30`. |
 
-Secret detection runs recursively, including inside unknown fields. A detected secret receives only a secret error at its path. Unknown fields may still receive warnings. Primary profile 6 demonstrates both at `api_key`, without printing the value. Secret names and paths are redacted too.
+The same name receives two errors because it breaks two independent rules.
 
-A subsequent review found that broad replacement could overwrite diagnostic codes and rewrite inserted redaction markers. Two new regression tests failed on the old implementation and passed after the fix. The code now preserves required codes and replaces display text in a single pass. The report documents the interpretation for custom policies whose secret words collide with fixed protocol text.
+## 4. Read an individual diagnostic
 
-## 4. Evidence and reuse
+One error is:
 
-Run the verification suite:
+```json
+{
+  "path": "$.profiles[2].max_duration_minutes",
+  "code": "type",
+  "message": "Expected int"
+}
+```
 
-```sh
+Read the path from left to right:
+
+```text
+$                       Start at the top of the input
+.profiles               Select the profiles list
+[2]                     Select its third profile
+.max_duration_minutes   Identify the field with the problem
+```
+
+This tells the person editing the configuration exactly where to make a correction.
+
+The program reports the problems; it does not rewrite the input.
+
+## 5. Understand the other results
+
+Profile 0 passes and has empty error and warning lists.
+
+Profile 1 has an unknown `owner` field. That produces a warning, but the profile remains valid because warnings do not count as errors.
+
+Elsewhere, primary profile 4 demonstrates a URL trap: an allowed-looking domain appears before `@`, but the actual hostname is `relay.example`. The validator checks the parsed hostname and correctly rejects it.
+
+Detected secrets receive a `secret` error without exposing their values. Their paths do not receive additional validation errors.
+
+## 6. Check the batch summary
+
+At the end:
+
+```json
+"summary": {
+  "errors": 13,
+  "invalid": 5,
+  "profiles": 7,
+  "valid": 2,
+  "warnings": 2
+}
+```
+
+These totals match the primary expectations in the README. The command returns exit **1** because some profiles are invalid, while still producing the report.
+
+## 7. Verify and repeat with another policy
+
+Run:
+
+```powershell
 python -m unittest discover -s tests -p "*_test.py" -v
 ```
 
-The recorded result is 18 tests passing. Tests check exact diagnostic paths/codes, boundary durations, URL host parsing, secrets, auth rules, exit codes, empty input, malformed files, deterministic output and absence of input mutation.
+The result should show **18 tests passing**. These checks verify the program's behavior, including duration boundaries, duplicates, authentication, secrets, and error handling.
 
-Now run the second team's file:
+Then run:
 
-```sh
+```powershell
 python app.py --input inputs/secondary.json
 ```
 
-The unchanged validator applies its narrower mobile policy. Profile 0 passes; profile 1 has a disallowed host and excessive duration; profile 2 has an unused auth reference and a floating-point duration; profile 3 contains a secret in an unknown auth field. Totals are 4 profiles, 1 valid, 3 invalid, 5 errors and 1 warning, with exit 1.
+The same code reads the second file's policy and produces **5 errors and 1 warning across 4 profiles**. This demonstrates reuse.
 
-Finally, run the truncated file:
-
-```sh
-python app.py --input inputs/malformed-input.txt
-```
-
-It produces a readable line/column error and exits 2. Complete reports, test output and exit statuses are saved in `evidence/`. The main submission report explains decisions, limitations and AI use. The core is deliberately kept as a standard-library CLI so a reviewer can run and inspect it without setup beyond Python.
+For the full saved outputs, open `evidence/primary-report.json`, `evidence/secondary-report.json`, and `evidence/tests.txt`.

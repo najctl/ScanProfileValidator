@@ -5,7 +5,9 @@
     {
       "name": "tests",
       "command": "python -m unittest discover -s tests -p \"*_test.py\" -v",
-      "exit_code": 0
+      "exit_code": 0,
+      "test_methods": 18,
+      "unittest_reported_seconds": 4.681
     },
     {
       "name": "primary",
@@ -36,5 +38,21 @@
       "command": "python app.py --input inputs/malformed-input.txt",
       "exit_code": 2
     }
-  ]
+  ],
+  "files_sha256": {
+    "app.py": "deb7dc06356bdb7dd565060b111ec250eede70f7791ac88db8d426e7addeeca2",
+    "validator.py": "e57222795448bfde04eaf5fcf6c409693892eeeac40e9e2c608a2d4470d53f1e",
+    "diagnostics.py": "e8c0f81f558bb0b799525347fe7c57fc61d8e9ea3dd824cb41123c38670ef60f",
+    "README.md": "8654f28c5fc76e204f97d94969b71dd0aafd6a3662aa0d7ef5c1a19454e567e2",
+    "SUBMISSION.md": "b9ee4cfb8cfcdb740faf9a33ec7d61d97e34da75a04be4cfe0aa65a00fca5746",
+    "WALKTHROUGH.md": "71c40ac609164d38b46ccb5a56079a9e36519828671728857d2d6cd0551218a5",
+    "tests/app_test.py": "d0a79bb35cf9738c684a5d80cb2b082c95c3c5b106974d3643909287afeb766e",
+    "inputs/primary.json": "16bb9cff13c2294b7edba02a7301a4c2a98577de50d67da281382efd629b4f65",
+    "inputs/secondary.json": "fc22f140c10cd456cf38b17c0ff15b91fb097e3a77316180f2c34189f2e64f26",
+    "inputs/malformed-input.txt": "168e4d1efa2ff7a96d7cc21162069fe7fd445ec9ae7923c819050516b63bfc8c",
+    "evidence/tests.txt": "ec78479ed27f1b4bdb1cfea83f2e298c30085aa1ee0982628d93d7cb76e2820b",
+    "evidence/primary-report.json": "bf6a24ecb7570aa74ccc283489caaf7749437c5851ba204dc93dcc8ad148f0a8",
+    "evidence/secondary-report.json": "479bcb28a02cddf1e0d899cf29ef9be6ae329e3dece3f2cebb9fd47f82ff0e8e",
+    "evidence/malformed-error.txt": "5612600c529c7ddc7b5ba1b4305441df47a0f1280e6de4ad15cce0f492e11141"
+  }
 }

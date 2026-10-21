@@ -28,16 +28,18 @@ def validate_profiles(payload, arguments=None):
         errors, warnings, secret_paths = [], [], set()
 
         def scan(value, path):
-            if isinstance(value, str) and value.startswith(prefixes):
-                secrets.add(value)
-                secret_paths.add(path)
-                errors.append(dict(path=path, code='secret', message='Secret value redacted'))
-            elif isinstance(value, dict):
-                for key, item in value.items():
-                    scan(item, child_path(path, key))
-            elif isinstance(value, list):
-                for i, item in enumerate(value):
-                    scan(item, f'{path}[{i}]')
+            # An explicit stack handles deep unknown fields without Python recursion.
+            pending = [(value, path)]
+            while pending:
+                value, path = pending.pop()
+                if isinstance(value, str) and value.startswith(prefixes):
+                    secrets.add(value)
+                    secret_paths.add(path)
+                    errors.append(dict(path=path, code='secret', message='Secret value redacted'))
+                elif isinstance(value, dict):
+                    pending.extend((item, child_path(path, key)) for key, item in value.items())
+                elif isinstance(value, list):
+                    pending.extend((item, f'{path}[{i}]') for i, item in enumerate(value))
 
         scan(profile, root)
 
