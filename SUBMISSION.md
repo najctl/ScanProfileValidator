@@ -123,11 +123,28 @@ Ran 18 tests in ...s
 OK
 ```
 
-**These tests check the Python program itself.** They are separate from the profiles being validated.
+These are **18 test methods**, with several inputs checked inside some methods. They test the program; they are separate from the profiles in a report. `OK` means they passed; elapsed time varies.
 
-They check rules and behavior such as duplicate names, duration boundaries, URL hostname matching, authentication, secret redaction, malformed input, and exit codes.
-
-The elapsed time can vary between runs. `OK` means the checks passed.
+| Existing test | Cases checked and expected result |
+| --- | --- |
+| Help | Show the input option and exit `0`. |
+| Missing or broken file | Show a readable error, no JSON report, and exit `2`. |
+| Primary example | Match every error path/code, warning counts and totals: 13 errors, 2 warnings; exit `1`. |
+| Secondary example | Apply its own policy; match error paths/codes and totals: 5 errors, 1 warning; exit `1`. |
+| Duration | Accept `5` and `240`; reject `4` and `241`. Boolean, decimal, string and null values produce type errors. |
+| Duplicate names | `api-nightly` followed by `API-Nightly`: the second gets duplicate and uppercase-format errors. |
+| Website host | Accept an allowed uppercase host with a numeric port; reject HTTP, misleading host text, a disallowed suffix and a malformed port. |
+| Secrets in nested data | Hide secrets in names, nested values and unknown field names, including quotes, backslashes and Unicode. One secret error per location; input unchanged. |
+| Secrets through the CLI | Neither output stream reveals the tested secrets; report paths hide them too. |
+| Diagnostic codes during redaction | Hide the secret name while preserving the required `type` error code. |
+| Redaction marker | Keep `[REDACTED]` intact even when another secret could match part of that marker. |
+| Missing fields and auth types | Report missing fields or wrong auth types; skip dependent auth checks when the auth type is missing or invalid. |
+| Auth references | Reject missing or malformed references and fields unused by the chosen auth type; accept `rec-0001`. |
+| Schedule | Accept midnight and Sunday `23:59`; reject `24:00`, `12:60`, a one-digit hour, lowercase day and trailing newline. |
+| Excluded paths and warnings | Reject missing leading slash, duplicates and wrong types. An unknown field alone leaves the profile valid. |
+| Repeatability | Repeated validation returns identical results and leaves the input unchanged. |
+| Valid and empty batches | Exit `0`; an empty batch returns empty results and zero totals. |
+| Invalid input structure | Reject the tested wrong root, missing policy, bad suffix and non-object profile; no report, exit `2`. |
 
 ## 6. Understand the exit codes
 
@@ -200,7 +217,7 @@ Docker and Compose produced reports identical to the two saved reports. Their co
 
 **Priority:** complete the required validator, verify both supplied examples, and make execution reproducible. The optional Docker runner was added after the core was verified. A server, database and deployment were deferred because the assignment does not require them.
 
-**Why Docker and Compose were added:** Docker supplies a consistent Python environment for reviewers who prefer containers. Compose stores the runtime options in one file, reducing the commands they need to remember. Both were added after the core validator was verified, as optional improvements to local use. They do not add a server, database, public deployment or new validation behavior. The README allows optional local developer-experience improvements and makes clear that the core alone can earn full marks.
+**Why containers:** Docker provides a consistent Python environment; Compose saves the runtime settings. Both are optional local conveniences, added after core verification. The README permits this stretch and awards full marks on the core alone.
 
 **Code organization:** `app.py` handles arguments, files, output, and exit codes. `validator.py` applies the rules. `diagnostics.py` handles paths, redaction, sorting, and totals. This keeps validation reusable without command-line dependencies.
 
@@ -229,134 +246,87 @@ Docker and Compose produced reports identical to the two saved reports. Their co
 
 ## 11. Optional: run with Docker
 
-Docker packages the same program with Python, so a reviewer can run it without installing Python locally. This is an optional convenience; it does not change the input files, rules or results.
+For the shorter container route, use **section 12**. Direct Docker commands are provided here for reviewers who prefer them.
 
-**This is local execution, not public deployment.** No application port is exposed, no web service is started, and the image has not been published. Building may download the official Python base image; validation itself runs without container networking under the documented commands.
-
-### Start Docker and build the image
-
-Install Docker if needed, then start its engine. On Windows, start Docker Desktop and use Linux containers. Open a terminal in this project folder and run:
+Start the Docker engine (Docker Desktop with Linux containers on Windows). From the project folder, build the image:
 
 ```powershell
 docker build -t scan-profile-validator .
 ```
 
-The first build may need an internet connection to download the Python base image. It also runs the existing **18 tests**. The build must succeed before you use the commands below.
-
-### Run the supplied examples
+The build runs the same 18 tests and may download the pinned Python base image. After it succeeds:
 
 ```powershell
 docker run --rm --network none --read-only scan-profile-validator --input inputs/primary.json
 docker run --rm --network none --read-only scan-profile-validator --input inputs/secondary.json
 ```
 
-The reports have the same totals as the Python commands. Both exit **1** because the supplied files contain deliberate errors. With no arguments, the container checks the primary input by default.
+Both return the reports in section 7 and exit `1`. Omitting the arguments selects primary by default.
 
-The options remove the container afterward (`--rm`), disable its network (`--network none`), and make its filesystem read-only (`--read-only`). No ports or real credentials are needed.
-
-### Run the same tests in Docker
+Run the existing suite, allowing temporary files for its test inputs:
 
 ```powershell
 docker run --rm --network none --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m --entrypoint python scan-profile-validator -m unittest discover -s tests -p "*_test.py" -v
 ```
 
-Expect **18 tests passing**, with exit **0**. The temporary directory is needed because the existing tests create temporary JSON files; no new test cases were added.
-
-For the malformed example:
+Expect 18 passing tests and exit `0`. Check malformed input with:
 
 ```powershell
 docker run --rm --network none --read-only scan-profile-validator --input inputs/malformed-input.txt
 ```
 
-Expect the same readable error and exit **2**. In PowerShell, inspect `$LASTEXITCODE` immediately after each command.
+Expect a readable error and exit `2`. In PowerShell, inspect `$LASTEXITCODE` immediately after a command.
 
-### Use your own input file
-
-Docker can read a folder you explicitly mount into it. If `my-profile.json` is in your current folder, this PowerShell command makes that folder available read-only at `/data`:
+To check your own `my-profile.json` in the current folder, mount that folder read-only:
 
 ```powershell
 docker run --rm --network none --read-only --mount "type=bind,source=$($PWD.Path),target=/data,readonly" scan-profile-validator --input /data/my-profile.json
 ```
 
-The file must follow the same input structure, including its policy and profiles list. It is not rewritten.
+The file needs the same policy/profiles structure. The pinned image runs as non-root user `10001:10001`; the build context includes only source, supplied inputs and tests. Validation runs without networking under these commands. This is local execution with no exposed ports or published service.
 
-### Verified Docker results
-
-The image was built locally and the same 18 tests passed inside the container. Primary and secondary JSON reports were compared in full with the native reports and matched exactly. Help, default input, malformed input and the read-only host-file mount were also verified. The commands, outcomes, build result and full-report comparisons are recorded in the `docker` section of `evidence/verification.json`. The shared reports above avoid duplicate output files.
-
-### Container decisions
-
-The base image is pinned to a specific digest for repeatable builds. The process runs as non-root user `10001:10001`. Only the three source files, supplied inputs and existing test file enter the build context. No package installation, extra service, multi-stage compilation or public image publishing is required for this standard-library application.
-
-Docker commands and their options follow the official [Dockerfile reference](https://docs.docker.com/reference/dockerfile/) and [container-run documentation](https://docs.docker.com/engine/containers/run/). Docker execution outcomes are consolidated in `evidence/verification.json`; native Python execution remains available independently.
+Recorded checks cover the build, tests, full report equality with Python, help, default input, malformed input and the host-file mount. See the `docker` section of `evidence/verification.json`.
 
 ## 12. Optional: shorter Docker commands with Compose
 
-Compose reads `compose.yaml`, which stores the container settings so you do not have to repeat them in every command. It runs the same program and the same 18 tests. There is no database or extra running service.
-
-Start Docker Desktop with Linux containers, then open a terminal in the project folder. Check that Compose is available:
+Compose stores the container options in `compose.yaml`. Start Docker Desktop with Linux containers, open the project folder in a terminal, then check availability:
 
 ```powershell
 docker compose version
 ```
 
-### Build and run the primary example in one command
+Build and run primary:
 
 ```powershell
 docker compose run --build --rm validator --input inputs/primary.json
 ```
 
-Read that command as follows:
+`validator` names the application service; `--input` selects the file. `--build` builds the image first, including the 18 tests; `--rm` removes the container afterward. Omitting `--input` selects primary.
 
-| Part | Meaning |
-| --- | --- |
-| `docker compose run` | Run a one-off command using the Compose configuration. |
-| `--build` | Build the image before running it; unchanged build layers can be reused. |
-| `--rm` | Remove the container after it finishes. |
-| `validator` | The service name in `compose.yaml`; it identifies the application, not an input file. |
-| `--input inputs/primary.json` | Tell the application which JSON file to check. |
-
-On the first run, the image build includes the existing test suite. You may see build progress before the report. The primary report should contain **7 profiles, 2 valid, 5 invalid, 13 errors and 2 warnings**, with exit **1**. These are expected input-validation findings.
-
-If you omit `--input`, the application uses `inputs/primary.json` by default. To select another file, keep the same service name and change the input argument, as shown below.
-
-### Run the secondary example
+Run secondary and the same test suite:
 
 ```powershell
 docker compose run --rm validator --input inputs/secondary.json
-```
-
-Expect the same secondary report and exit **1**.
-
-### Run the existing tests
-
-```powershell
 docker compose run --rm --entrypoint python validator -m unittest discover -s tests -p "*_test.py" -v
 ```
 
-Expect **18 tests passing** and exit **0**. These are the same test cases as the native Python suite, not additional cases.
+The fixture reports match section 7 and exit `1`; all 18 tests should pass with exit `0`.
 
-To check malformed JSON:
+Check malformed input (readable error, exit `2`):
 
 ```powershell
 docker compose run --rm validator --input inputs/malformed-input.txt
 ```
 
-Expect a readable error and exit **2**. Use `$LASTEXITCODE` immediately afterward in PowerShell to inspect the result.
+Use `$LASTEXITCODE` immediately afterward to inspect a command's result.
 
-### Save a report
-
-Keep build output separate by building first, then redirecting a run's JSON output:
+To save a report on your computer, build separately before redirecting the JSON output:
 
 ```powershell
 docker compose build
 docker compose run --rm validator --input inputs/primary.json > primary-report.json
 ```
 
-The report is saved on your computer. A database is not needed to retain this output.
+Compose uses a non-root user, no network, a read-only root filesystem and a small temporary directory for tests. It drops Linux capabilities, disables privilege escalation, and mounts no host folders or Docker socket by default. No database or public deployment is involved.
 
-### What Compose configures
-
-The container runs as user `10001:10001`, without a network, with a read-only root filesystem and a small writable temporary directory for the existing tests. Linux capabilities are dropped and privilege escalation is disabled. No host folders or Docker socket are mounted by default. `--rm` removes the container afterward; the built image remains available for reuse.
-
-The build-and-run command, both full reports, the same 18 tests, malformed-input handling and runtime settings were verified locally. Results and runtime settings are recorded in the `compose` section of `evidence/verification.json`, with one shared JSON report per fixture. The configuration follows the official [Compose service reference](https://docs.docker.com/reference/compose-file/services/) and [one-off command documentation](https://docs.docker.com/reference/cli/docker/compose/run/).
+The build-and-run workflow, reports, tests, malformed input and runtime settings were verified; see the `compose` section of `evidence/verification.json`.

@@ -136,7 +136,17 @@ python -m unittest discover -s tests -p "*_test.py" -v
 docker compose run --rm --entrypoint python validator -m unittest discover -s tests -p "*_test.py" -v
 ```
 
-Expect **18 tests passing** and exit **0**. This is one test suite run in either environment, not two sets of different tests. The checks cover duration boundaries, duplicates, authentication, secrets and error handling.
+Expect **18 tests passing** and exit **0**. Both routes run the same suite. Section 5 of `SUBMISSION.md` lists all 18 tests and their expected behavior.
+
+For one concrete example, the duration test starts with a valid profile and changes only its maximum duration:
+
+| Value tested | Expected result |
+| --- | --- |
+| `5` or `240` | Accepted: both limits are included. |
+| `4` or `241` | One `invalid` error at `max_duration_minutes`. |
+| `true`, `45.0`, `"45"` or `null` | One `type` error at that field. |
+
+The test compares the actual error path and code with these expectations. A mismatch makes the test fail. The `test_duration_boundaries_and_types ... ok` line in the verbose output confirms all these cases passed.
 
 Now select the second team's input using the same route.
 
