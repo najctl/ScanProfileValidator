@@ -1,0 +1,142 @@
+{
+  "profiles": [
+    {
+      "errors": [],
+      "index": 0,
+      "name": "api-nightly",
+      "valid": true,
+      "warnings": []
+    },
+    {
+      "errors": [],
+      "index": 1,
+      "name": "portal-weekly",
+      "valid": true,
+      "warnings": [
+        {
+          "code": "unknown_field",
+          "message": "Unknown field",
+          "path": "$.profiles[1].owner"
+        }
+      ]
+    },
+    {
+      "errors": [
+        {
+          "code": "type",
+          "message": "Expected int",
+          "path": "$.profiles[2].max_duration_minutes"
+        },
+        {
+          "code": "duplicate",
+          "message": "Name repeats an earlier profile ignoring case",
+          "path": "$.profiles[2].name"
+        },
+        {
+          "code": "invalid",
+          "message": "Name must match [a-z][a-z0-9-]{2,39}",
+          "path": "$.profiles[2].name"
+        },
+        {
+          "code": "invalid",
+          "message": "Expected daily HH:MM or weekly DAY HH:MM with a valid time",
+          "path": "$.profiles[2].schedule"
+        }
+      ],
+      "index": 2,
+      "name": "API-Nightly",
+      "valid": false,
+      "warnings": []
+    },
+    {
+      "errors": [
+        {
+          "code": "secret",
+          "message": "Secret value redacted",
+          "path": "$.profiles[3].auth.token_ref"
+        }
+      ],
+      "index": 3,
+      "name": "billing-scan",
+      "valid": false,
+      "warnings": []
+    },
+    {
+      "errors": [
+        {
+          "code": "not_allowed",
+          "message": "Field is not used by this authentication type",
+          "path": "$.profiles[4].auth.token_ref"
+        },
+        {
+          "code": "invalid",
+          "message": "Expected an HTTPS URL with an allowed hostname",
+          "path": "$.profiles[4].target"
+        }
+      ],
+      "index": 4,
+      "name": "partner-export",
+      "valid": false,
+      "warnings": []
+    },
+    {
+      "errors": [
+        {
+          "code": "invalid",
+          "message": "Excluded path must start with /",
+          "path": "$.profiles[5].exclude_paths[1]"
+        },
+        {
+          "code": "duplicate",
+          "message": "Excluded path repeats an earlier entry",
+          "path": "$.profiles[5].exclude_paths[2]"
+        },
+        {
+          "code": "invalid",
+          "message": "Expected an HTTPS URL with an allowed hostname",
+          "path": "$.profiles[5].target"
+        }
+      ],
+      "index": 5,
+      "name": "search-crawl",
+      "valid": false,
+      "warnings": []
+    },
+    {
+      "errors": [
+        {
+          "code": "secret",
+          "message": "Secret value redacted",
+          "path": "$.profiles[6].api_key"
+        },
+        {
+          "code": "missing",
+          "message": "Required field is missing",
+          "path": "$.profiles[6].auth.token_ref"
+        },
+        {
+          "code": "missing",
+          "message": "Required field is missing",
+          "path": "$.profiles[6].schedule"
+        }
+      ],
+      "index": 6,
+      "name": "docs-preview",
+      "valid": false,
+      "warnings": [
+        {
+          "code": "unknown_field",
+          "message": "Unknown field",
+          "path": "$.profiles[6].api_key"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "errors": 13,
+    "invalid": 5,
+    "profiles": 7,
+    "valid": 2,
+    "warnings": 2
+  }
+}

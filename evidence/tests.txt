@@ -1,0 +1,23 @@
+test_auth_formats_and_unused_fields (app_test.ValidatorTests.test_auth_formats_and_unused_fields) ... ok
+test_case_insensitive_duplicate (app_test.ValidatorTests.test_case_insensitive_duplicate) ... ok
+test_cli_secret_redaction (app_test.ValidatorTests.test_cli_secret_redaction) ... ok
+test_deterministic_and_no_mutation (app_test.ValidatorTests.test_deterministic_and_no_mutation) ... ok
+test_duration_boundaries_and_types (app_test.ValidatorTests.test_duration_boundaries_and_types) ... ok
+test_excludes_and_warning_only (app_test.ValidatorTests.test_excludes_and_warning_only) ... ok
+test_file_and_malformed_errors (app_test.ValidatorTests.test_file_and_malformed_errors) ... ok
+test_help (app_test.ValidatorTests.test_help) ... ok
+test_hostname_not_url_substring (app_test.ValidatorTests.test_hostname_not_url_substring) ... ok
+test_invalid_envelopes_exit_two (app_test.ValidatorTests.test_invalid_envelopes_exit_two) ... ok
+test_missing_wrong_types_and_auth_skip (app_test.ValidatorTests.test_missing_wrong_types_and_auth_skip) ... ok
+test_primary_exact_diagnostics (app_test.ValidatorTests.test_primary_exact_diagnostics) ... ok
+test_redaction_does_not_rewrite_its_own_marker (app_test.ValidatorTests.test_redaction_does_not_rewrite_its_own_marker) ... ok
+test_redaction_preserves_diagnostic_codes (app_test.ValidatorTests.test_redaction_preserves_diagnostic_codes) ... ok
+test_schedule_boundaries (app_test.ValidatorTests.test_schedule_boundaries) ... ok
+test_secondary_reuses_policy (app_test.ValidatorTests.test_secondary_reuses_policy) ... ok
+test_secrets_at_depth_and_in_name (app_test.ValidatorTests.test_secrets_at_depth_and_in_name) ... ok
+test_valid_and_empty_exit_zero (app_test.ValidatorTests.test_valid_and_empty_exit_zero) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 5.041s
+
+OK

@@ -1,0 +1,1 @@
+{"policy": {"allowed_suffixes": [".north.example.test"]}, "profiles": [{"name": "truncated"

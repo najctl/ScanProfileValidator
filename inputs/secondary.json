@@ -1,0 +1,55 @@
+{
+  "policy": {
+    "allowed_suffixes": [
+      ".mobile.north.example.test"
+    ],
+    "secret_prefixes": [
+      "demo_tok_",
+      "DEMO-KEY-"
+    ]
+  },
+  "profiles": [
+    {
+      "name": "mobile-api-daily",
+      "target": "https://api.mobile.north.example.test/",
+      "schedule": "daily 00:00",
+      "auth": {
+        "type": "bearer",
+        "token_ref": "MOBILE_API_TOKEN"
+      },
+      "max_duration_minutes": 5,
+      "exclude_paths": []
+    },
+    {
+      "name": "mobile-web-weekly",
+      "target": "https://web.north.example.test/",
+      "schedule": "weekly Sat 04:45",
+      "auth": {
+        "type": "recorded",
+        "recording_id": "rec-0311"
+      },
+      "max_duration_minutes": 241
+    },
+    {
+      "name": "mobile-push",
+      "target": "https://push.mobile.north.example.test/",
+      "schedule": "daily 06:00",
+      "auth": {
+        "type": "none",
+        "recording_id": "rec-0001"
+      },
+      "max_duration_minutes": 45.0
+    },
+    {
+      "name": "mobile-legacy",
+      "target": "https://legacy.mobile.north.example.test/",
+      "schedule": "weekly Sun 05:00",
+      "auth": {
+        "type": "bearer",
+        "token_ref": "MOBILE_LEGACY_KEY",
+        "token": "demo_tok_Q8w3Er5Ty"
+      },
+      "max_duration_minutes": 180
+    }
+  ]
+}

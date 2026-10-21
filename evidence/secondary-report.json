@@ -1,0 +1,73 @@
+{
+  "profiles": [
+    {
+      "errors": [],
+      "index": 0,
+      "name": "mobile-api-daily",
+      "valid": true,
+      "warnings": []
+    },
+    {
+      "errors": [
+        {
+          "code": "invalid",
+          "message": "Duration must be between 5 and 240",
+          "path": "$.profiles[1].max_duration_minutes"
+        },
+        {
+          "code": "invalid",
+          "message": "Expected an HTTPS URL with an allowed hostname",
+          "path": "$.profiles[1].target"
+        }
+      ],
+      "index": 1,
+      "name": "mobile-web-weekly",
+      "valid": false,
+      "warnings": []
+    },
+    {
+      "errors": [
+        {
+          "code": "not_allowed",
+          "message": "Field is not used by this authentication type",
+          "path": "$.profiles[2].auth.recording_id"
+        },
+        {
+          "code": "type",
+          "message": "Expected int",
+          "path": "$.profiles[2].max_duration_minutes"
+        }
+      ],
+      "index": 2,
+      "name": "mobile-push",
+      "valid": false,
+      "warnings": []
+    },
+    {
+      "errors": [
+        {
+          "code": "secret",
+          "message": "Secret value redacted",
+          "path": "$.profiles[3].auth.token"
+        }
+      ],
+      "index": 3,
+      "name": "mobile-legacy",
+      "valid": false,
+      "warnings": [
+        {
+          "code": "unknown_field",
+          "message": "Unknown field",
+          "path": "$.profiles[3].auth.token"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "errors": 5,
+    "invalid": 3,
+    "profiles": 4,
+    "valid": 1,
+    "warnings": 1
+  }
+}

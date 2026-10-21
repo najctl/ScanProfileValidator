@@ -1,0 +1,40 @@
+{
+  "python_version": "3.13.2",
+  "operating_system": "Windows",
+  "runs": [
+    {
+      "name": "tests",
+      "command": "python -m unittest discover -s tests -p *_test.py -v",
+      "exit_code": 0
+    },
+    {
+      "name": "primary",
+      "command": "python app.py --input inputs/primary.json",
+      "exit_code": 1,
+      "summary": {
+        "errors": 13,
+        "invalid": 5,
+        "profiles": 7,
+        "valid": 2,
+        "warnings": 2
+      }
+    },
+    {
+      "name": "secondary",
+      "command": "python app.py --input inputs/secondary.json",
+      "exit_code": 1,
+      "summary": {
+        "errors": 5,
+        "invalid": 3,
+        "profiles": 4,
+        "valid": 1,
+        "warnings": 1
+      }
+    },
+    {
+      "name": "malformed",
+      "command": "python app.py --input inputs/malformed-input.txt",
+      "exit_code": 2
+    }
+  ]
+}

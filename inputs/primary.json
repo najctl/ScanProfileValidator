@@ -1,0 +1,92 @@
+{
+  "policy": {
+    "allowed_suffixes": [
+      ".north.example.test",
+      ".north-staging.example.test"
+    ],
+    "secret_prefixes": [
+      "demo_tok_",
+      "DEMO-KEY-"
+    ]
+  },
+  "profiles": [
+    {
+      "name": "api-nightly",
+      "target": "https://api.north.example.test/v2/",
+      "schedule": "daily 02:30",
+      "auth": {
+        "type": "bearer",
+        "token_ref": "NORTH_API_TOKEN"
+      },
+      "max_duration_minutes": 90,
+      "exclude_paths": [
+        "/health",
+        "/metrics"
+      ]
+    },
+    {
+      "name": "portal-weekly",
+      "target": "https://Portal.North.Example.Test:8443/login",
+      "schedule": "weekly Sun 03:00",
+      "auth": {
+        "type": "recorded",
+        "recording_id": "rec-0042"
+      },
+      "max_duration_minutes": 120,
+      "owner": "team-portal"
+    },
+    {
+      "name": "API-Nightly",
+      "target": "https://api.north-staging.example.test/",
+      "schedule": "daily 7:30",
+      "auth": {
+        "type": "none"
+      },
+      "max_duration_minutes": true
+    },
+    {
+      "name": "billing-scan",
+      "target": "https://billing.north.example.test/",
+      "schedule": "weekly Wed 01:15",
+      "auth": {
+        "type": "bearer",
+        "token_ref": "demo_tok_7Hq2Lx9Pz"
+      },
+      "max_duration_minutes": 60
+    },
+    {
+      "name": "partner-export",
+      "target": "https://export.north.example.test@relay.example/",
+      "schedule": "weekly Fri 22:00",
+      "auth": {
+        "type": "recorded",
+        "recording_id": "rec-0107",
+        "token_ref": "PARTNER_TOKEN"
+      },
+      "max_duration_minutes": 240
+    },
+    {
+      "name": "search-crawl",
+      "target": "http://search.north.example.test/",
+      "schedule": "daily 23:59",
+      "auth": {
+        "type": "none"
+      },
+      "max_duration_minutes": 30,
+      "exclude_paths": [
+        "/admin",
+        "static",
+        "/admin"
+      ]
+    },
+    {
+      "name": "docs-preview",
+      "target": "https://docs.north-staging.example.test/",
+      "auth": {
+        "type": "bearer"
+      },
+      "max_duration_minutes": 45,
+      "api_key": "DEMO-KEY-51c0e3"
+    }
+  ]
+}
