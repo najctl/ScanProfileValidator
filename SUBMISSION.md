@@ -17,6 +17,8 @@ The program checks whether those settings follow the assignment's rules. It retu
 
 The README preserves the original exercise text, including descriptions of the unfinished starter. This guide describes the completed submission.
 
+**Walkthrough:** [watch the video on Google Drive](https://drive.google.com/file/d/14yB7qCmOp86NEQnSCa3YB9cPjIzAUFSJ/view?usp=sharing) (2:54, male AI narration and captions), or read [WALKTHROUGH.md](WALKTHROUGH.md). The written walkthrough supplies the accessible text alternative permitted by the README. The video is linked rather than bundled, as required by the submission portal.
+
 You can run the same validator in two ways: directly with Python (sections 2–6), or locally through Docker Compose (section 12). Choose one route; you do not need both. The rules, input files, reports and 18-test suite are the same.
 
 ## 1. Open the project
@@ -40,6 +42,7 @@ evidence/          Saved results from executed commands
 README.md          The company's assignment
 SUBMISSION.md      This guide and the implementation notes
 WALKTHROUGH.md     A worked example showing the program in use
+WALKTHROUGH_LINK.md  Link to the screen demonstration on Google Drive
 ```
 
 Keep the three Python files together.
@@ -132,7 +135,7 @@ These are **18 test methods**, with several inputs checked inside some methods. 
 | Primary example | Match every error path/code, warning counts and totals: 13 errors, 2 warnings; exit `1`. |
 | Secondary example | Apply its own policy; match error paths/codes and totals: 5 errors, 1 warning; exit `1`. |
 | Duration | Accept `5` and `240`; reject `4` and `241`. Boolean, decimal, string and null values produce type errors. |
-| Duplicate names | `api-nightly` followed by `API-Nightly`: the second gets duplicate and uppercase-format errors. |
+| Duplicate names | `api-nightly` followed by `API-Nightly`: the second gets duplicate and uppercase-format errors. An earlier secret name also counts for duplicate detection. |
 | Website host | Accept an allowed uppercase host with a numeric port; reject HTTP, misleading host text, a disallowed suffix and a malformed port. |
 | Secrets in nested data | Hide secrets in names, nested values and unknown field names, including quotes, backslashes and Unicode. One secret error per location; input unchanged. |
 | Secrets through the CLI | Neither output stream reveals the tested secrets; report paths hide them too. |
@@ -217,7 +220,7 @@ Docker and Compose produced reports identical to the two saved reports. Their co
 
 **Priority:** complete the required validator, verify both supplied examples, and make execution reproducible. The optional Docker runner was added after the core was verified. A server, database and deployment were deferred because the assignment does not require them.
 
-**Why containers:** Docker provides a consistent Python environment; Compose saves the runtime settings. Both are optional local conveniences, added after core verification. The README permits this stretch and awards full marks on the core alone.
+**Why containers:** Docker provides a consistent Python environment; Compose saves the runtime settings. Both are optional local conveniences, added after core verification. The README permits this stretch; full marks are available on the core alone.
 
 **Code organization:** `app.py` handles arguments, files, output, and exit codes. `validator.py` applies the rules. `diagnostics.py` handles paths, redaction, sorting, and totals. This keeps validation reusable without command-line dependencies.
 
@@ -225,7 +228,7 @@ Docker and Compose produced reports identical to the two saved reports. Their co
 
 **Refinement:** an early redaction implementation could overwrite diagnostic codes or rewrite its replacement marker. Two regression checks reproduced those problems. Redaction was corrected, and both checks now pass within the 18-test suite.
 
-**Further review:** nested secret detection uses an explicit stack to avoid recursion failures. A later review found that an error or warning location could reveal a secret used as an unknown field name, especially if it contained a quote, backslash, newline or non-ASCII character. Secret-looking unknown names are now detected, and each path component is redacted before being escaped for display. The input stays unchanged. These cases were added inside existing tests, so the suite still has 18 test methods. The module imports and execution from another directory were also checked.
+**Further review:** nested secret detection uses an explicit stack to avoid recursion failures. A later review found that an error or warning location could reveal a secret used as an unknown field name, especially if it contained a quote, backslash, newline or non-ASCII character. Secret-looking unknown names are now detected, and each path component is redacted before being escaped for display. The input stays unchanged. These cases were added inside existing tests, so the suite still has 18 test methods. The module imports and execution from another directory were also checked. A final review found that an earlier secret name was skipped when checking later duplicates. The name is now tracked internally while its displayed value stays redacted. The existing duplicate test failed before the correction and passes afterward; the suite still has 18 methods.
 
 ### Assumptions and limitations
 

@@ -72,6 +72,16 @@ class ValidatorTests(unittest.TestCase):
         data['profiles'][1]['name'] = 'API-Nightly'
         self.assertEqual(self.codes(data), [('$.profiles[1].name', 'duplicate'), ('$.profiles[1].name', 'invalid')])
 
+        # A secret name still reserves its identity for later duplicate checks.
+        data['profiles'][0]['name'] = 'demo_tok_same'
+        data['profiles'][1]['name'] = 'DEMO_TOK_SAME'
+        self.assertEqual(self.codes(data), [
+            ('$.profiles[0].name', 'secret'),
+            ('$.profiles[1].name', 'duplicate'),
+            ('$.profiles[1].name', 'invalid'),
+        ])
+        self.assertNotIn('demo_tok_same', json.dumps(validate_profiles(data)))
+
     def test_hostname_not_url_substring(self):
         for url, valid in [('https://API.NORTH.EXAMPLE.TEST:8443/', True), ('https://api.north.example.test@relay.example/', False), ('https://api.north.example.test.evil/', False), ('https://north.example.test/', False), ('http://api.north.example.test/', False), ('https://api.north.example.test:bad/', False)]:
             with self.subTest(url=url):

@@ -86,7 +86,9 @@ def validate_profiles(payload, arguments=None):
                 error(root + '.name', 'invalid', 'Name must match [a-z][a-z0-9-]{2,39}')
             if name.casefold() in names:
                 error(root + '.name', 'duplicate', 'Name repeats an earlier profile ignoring case')
-            names.add(name.casefold())
+        # Secret precedence suppresses errors at that path, not name identity.
+        if isinstance(profile.get('name'), str):
+            names.add(profile['name'].casefold())
         target = get(profile, 'target', root, str)
         if target is not None:
             try:

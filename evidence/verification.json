@@ -1,17 +1,32 @@
 {
-  "python_version": "3.13.2",
+  "python_version": "3.12.14",
   "operating_system": "Windows",
   "runs": [
     {
       "name": "tests",
-      "command": "python -m unittest discover -s tests -p \"*_test.py\" -v",
+      "command": [
+        "C:\\Users\\HP\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "*_test.py",
+        "-v"
+      ],
       "exit_code": 0,
       "test_methods": 18,
-      "unittest_reported_seconds": 5.114
+      "unittest_reported_seconds": 3.831
     },
     {
       "name": "primary",
-      "command": "python app.py --input inputs/primary.json",
+      "command": [
+        "C:\\Users\\HP\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "app.py",
+        "--input",
+        "inputs/primary.json"
+      ],
       "exit_code": 1,
       "summary": {
         "errors": 13,
@@ -23,7 +38,12 @@
     },
     {
       "name": "secondary",
-      "command": "python app.py --input inputs/secondary.json",
+      "command": [
+        "C:\\Users\\HP\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "app.py",
+        "--input",
+        "inputs/secondary.json"
+      ],
       "exit_code": 1,
       "summary": {
         "errors": 5,
@@ -35,47 +55,54 @@
     },
     {
       "name": "malformed",
-      "command": "python app.py --input inputs/malformed-input.txt",
+      "command": [
+        "C:\\Users\\HP\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "app.py",
+        "--input",
+        "inputs/malformed-input.txt"
+      ],
       "exit_code": 2
     }
   ],
   "files_sha256": {
     "app.py": "deb7dc06356bdb7dd565060b111ec250eede70f7791ac88db8d426e7addeeca2",
-    "validator.py": "855ecc442c4512fd95f0ff19500276a9374b31a44575f90833cfe634afa96adf",
+    "validator.py": "b3dad8b3356bc5d308ab4cfbfab9a5018ca86e3bc8a4675b26febd4cd3479a1f",
     "diagnostics.py": "92c4c23f6516ed5cfe9b8b36cb000e18868fdaa9d098b9b4e85cf853407090e0",
     "README.md": "b264abdd5079b4b74906113b688fde02024fec9a81a4772352d48e2428212cdb",
-    "SUBMISSION.md": "3ef3576d9e5683e73496267dbce139245c410c2150eff1c09ef362eaa581f3c3",
-    "WALKTHROUGH.md": "520d59953b34ec2b9fbe2bb17604c807bd1b2b406a841e756b81c7d6be67af91",
-    "tests/app_test.py": "073f1c20b795202e94ba4801da4e506c3677f4b4688e2cab561b73d32655d7b9",
+    "SUBMISSION.md": "7888dd1a601ee3339b7f437df7f0a960b458799ebb27d5355a05eb29f484b4a2",
+    "WALKTHROUGH.md": "a75474c95503bfd52e903b669c45d3614bd4a577ebd21a94e8e98d45b6bdb973",
+    "tests/app_test.py": "a28d05380bb215eec2203ef7692f5e13e92714f6406924575802144490758919",
     "inputs/primary.json": "16bb9cff13c2294b7edba02a7301a4c2a98577de50d67da281382efd629b4f65",
     "inputs/secondary.json": "fc22f140c10cd456cf38b17c0ff15b91fb097e3a77316180f2c34189f2e64f26",
     "inputs/malformed-input.txt": "168e4d1efa2ff7a96d7cc21162069fe7fd445ec9ae7923c819050516b63bfc8c",
-    "evidence/tests.txt": "46d44e5040df9fed0b987d500683357500a5b720ada3190669e2dc8075ec582b",
+    "evidence/tests.txt": "6dda1d5b13ba2bb88ecf2c3d2c614a859064424108e015e90a638e8f19523819",
     "evidence/primary-report.json": "bf6a24ecb7570aa74ccc283489caaf7749437c5851ba204dc93dcc8ad148f0a8",
     "evidence/secondary-report.json": "479bcb28a02cddf1e0d899cf29ef9be6ae329e3dece3f2cebb9fd47f82ff0e8e",
     "evidence/malformed-error.txt": "5612600c529c7ddc7b5ba1b4305441df47a0f1280e6de4ad15cce0f492e11141",
     "Dockerfile": "7b5fafb56ba4f6f588299091a26c99587debae5bf2f88dbfcb69c09dff44b3a2",
     ".dockerignore": "9ebed02743ed22a710efbfbc4a035fee552f71d043494586c465325ea7e0fe83",
-    "compose.yaml": "c29f0f96dad83b98c3af6b1903cf3d846c40e9388dbaaa36ef07eec7674a01b2"
+    "compose.yaml": "c29f0f96dad83b98c3af6b1903cf3d846c40e9388dbaaa36ef07eec7674a01b2",
+    ".gitignore": "804191f7cfdf43fd769f2ce6401e91e6164dc3105fd22628ab955dc1480ba781",
+    "WALKTHROUGH_LINK.md": "f42155f46300b2e2a72222d3a110a066c33c1ef62c25fb01b320baaec48ff867"
   },
   "docker": {
     "image_tag": "scan-profile-validator",
-    "image_id": "sha256:f1890d25593521e48eee8204fc608989e04459117151187181538af25b8f5cf1",
+    "image_id": "sha256:ceb7840d875b7c97c6a1e1e60a0a79aafcc0244eada872053a47b410d8943485",
     "base_image": "python:3.13-slim@sha256:6771159cd4fa5d9bba1258caf0b82e6b73458c694d178ad97c5e925c2d0e1a91",
     "docker_client_version": "29.4.3",
     "docker_server_version": "29.4.3",
     "container_user": "10001:10001",
     "source_sha256": {
       "app.py": "deb7dc06356bdb7dd565060b111ec250eede70f7791ac88db8d426e7addeeca2",
-      "validator.py": "855ecc442c4512fd95f0ff19500276a9374b31a44575f90833cfe634afa96adf",
+      "validator.py": "b3dad8b3356bc5d308ab4cfbfab9a5018ca86e3bc8a4675b26febd4cd3479a1f",
       "diagnostics.py": "92c4c23f6516ed5cfe9b8b36cb000e18868fdaa9d098b9b4e85cf853407090e0",
-      "tests/app_test.py": "073f1c20b795202e94ba4801da4e506c3677f4b4688e2cab561b73d32655d7b9"
+      "tests/app_test.py": "a28d05380bb215eec2203ef7692f5e13e92714f6406924575802144490758919"
     },
     "build": {
-      "command": "docker compose build",
+      "command": "docker compose build --no-cache",
       "exit_code": 0,
       "test_methods": 18,
-      "unittest_reported_seconds": 6.115
+      "unittest_reported_seconds": 6.758
     },
     "runs": [
       {
@@ -103,7 +130,7 @@
         ],
         "exit_code": 0,
         "test_methods": 18,
-        "unittest_reported_seconds": 6.622
+        "unittest_reported_seconds": 6.728
       },
       {
         "name": "primary",
@@ -203,15 +230,16 @@
           "none",
           "--read-only",
           "--mount",
-          "type=bind,source=<project-directory>,target=/data,readonly",
+          "type=bind,source=C:\\Users\\HP\\Desktop\\9raya\\candidate,target=/data,readonly",
           "scan-profile-validator",
           "--input",
-          "/data/inputs/primary.json"
+          "/data/inputs/secondary.json"
         ],
         "exit_code": 1,
         "matches_native_report": true
       }
-    ]
+    ],
+    "container_python_version": "3.13.14"
   },
   "compose": {
     "configuration": {
@@ -219,7 +247,7 @@
       "services": {
         "validator": {
           "build": {
-            "context": "<project-directory>",
+            "context": "C:\\Users\\HP\\Desktop\\9raya\\candidate",
             "dockerfile": "Dockerfile"
           },
           "cap_drop": [
@@ -262,7 +290,7 @@
         ],
         "exit_code": 0,
         "test_methods": 18,
-        "unittest_reported_seconds": 6.493
+        "unittest_reported_seconds": 6.648
       },
       {
         "name": "primary",
@@ -377,5 +405,106 @@
     "additional_in_memory_key_variations_passed": 100,
     "docker_cases_pass_after_fix": true,
     "compose_cases_pass_after_fix": true
+  },
+  "native_interpreter": "C:\\Users\\HP\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+  "final_review": {
+    "date": "2026-10-22",
+    "requirement_checks": [
+      {
+        "requirement": "Name format and length limits",
+        "passed": true
+      },
+      {
+        "requirement": "Case-insensitive duplicates including earlier secrets",
+        "passed": true
+      },
+      {
+        "requirement": "HTTPS parsed hostname and URL traps",
+        "passed": true
+      },
+      {
+        "requirement": "Schedule formats, all weekdays and time limits",
+        "passed": true
+      },
+      {
+        "requirement": "Integer duration boundaries and boolean/float rejection",
+        "passed": true
+      },
+      {
+        "requirement": "Auth references, unused fields and skipped dependent checks",
+        "passed": true
+      },
+      {
+        "requirement": "Required fields, wrong types and null display names",
+        "passed": true
+      },
+      {
+        "requirement": "Excluded paths, duplicates and entry types",
+        "passed": true
+      },
+      {
+        "requirement": "Unknown profile/auth fields and warning-only validity",
+        "passed": true
+      },
+      {
+        "requirement": "Deep secrets, escaped keys, no extra error and no input mutation",
+        "passed": true
+      },
+      {
+        "requirement": "Documented empty policy-array behavior",
+        "passed": true
+      },
+      {
+        "requirement": "CLI help, default input, exit codes, parser/read failures and empty batch",
+        "passed": true
+      },
+      {
+        "requirement": "Deterministic output across hash seeds and no mutation",
+        "passed": true
+      },
+      {
+        "requirement": "Both complete fixture reports and summaries",
+        "passed": true
+      },
+      {
+        "requirement": "Original README and supplied inputs unchanged",
+        "passed": true
+      },
+      {
+        "requirement": "Python 3.10 syntax, 18 methods, document links and code fences",
+        "passed": true
+      }
+    ],
+    "duplicate_secret_name_correction": {
+      "existing_test_method": "test_case_insensitive_duplicate",
+      "regression_failed_before_fix": true,
+      "regression_passes_after_fix": true,
+      "test_method_count": 18,
+      "change": "Track earlier string names even when secret precedence hides their displayed value; later case-insensitive duplicates are still diagnosed."
+    },
+    "video": {
+      "duration_seconds": 173.87,
+      "narration": "AI-generated male neural voice, generated offline",
+      "written_alternative": "WALKTHROUGH.md",
+      "note": "The short video is a companion; the written walkthrough is the README-permitted accessible text alternative.",
+      "url": "https://drive.google.com/file/d/14yB7qCmOp86NEQnSCa3YB9cPjIzAUFSJ/view?usp=sharing",
+      "captions": "English captions visible in the linked video",
+      "link_check": {
+        "date": "2026-10-22",
+        "unauthenticated_http_status": 200,
+        "page_title": "WALKTHROUGH.mp4 - Google Drive",
+        "listed_size_bytes": 13498006,
+        "access_request_required": false,
+        "limitation": "Public preview page checked; browser playback was not exercised in this check."
+      }
+    },
+    "original_readme_and_inputs_unchanged": true
+  },
+  "submission_packaging": {
+    "maximum_bytes": 5000000,
+    "video_in_archive": false,
+    "subtitle_file_in_archive": false,
+    "video_link_file": "WALKTHROUGH_LINK.md",
+    "excluded": "Dependencies, build output, Git metadata, caches, embedded videos and separate subtitle files."
   }
 }

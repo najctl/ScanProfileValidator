@@ -2,6 +2,8 @@
 
 This document follows one supplied profile from input to validation report. It is the written alternative to the requested walkthrough recording. You can follow it with Python or Docker Compose; both routes use the same code, files and rules.
 
+Video companion: [watch on Google Drive](https://drive.google.com/file/d/14yB7qCmOp86NEQnSCa3YB9cPjIzAUFSJ/view?usp=sharing) (2:54, AI-generated male narration and English captions). This written guide is the accessible text alternative allowed by the assignment.
+
 ## 1. Look at the input
 
 Open `inputs/primary.json`.
